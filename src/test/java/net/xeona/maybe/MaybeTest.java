@@ -1,30 +1,35 @@
 package net.xeona.maybe;
 
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
+import static net.xeona.maybe.Maybe.fromOptional;
 import static net.xeona.maybe.Maybe.just;
 import static net.xeona.maybe.Maybe.maybe;
 import static net.xeona.maybe.Maybe.nothing;
+import static net.xeona.maybe.Maybe.toOptional;
 import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import net.xeona.function.BinaryConsumer;
 import net.xeona.function.BinaryFunction;
@@ -32,6 +37,7 @@ import net.xeona.function.Consumer;
 import net.xeona.function.Function;
 import net.xeona.function.Provider;
 import net.xeona.function.ToBooleanFunction;
+import net.xeona.function.ToByteFunction;
 import net.xeona.function.ToCharFunction;
 import net.xeona.function.ToDoubleFunction;
 import net.xeona.function.ToFloatFunction;
@@ -39,46 +45,39 @@ import net.xeona.function.ToIntFunction;
 import net.xeona.function.ToLongFunction;
 import net.xeona.function.ToShortFunction;
 import net.xeona.function.VoidFunction;
-import net.xeona.maybe.Maybe;
-import net.xeona.maybe.MaybeBoolean;
-import net.xeona.maybe.MaybeChar;
-import net.xeona.maybe.MaybeDouble;
-import net.xeona.maybe.MaybeFloat;
-import net.xeona.maybe.MaybeInt;
-import net.xeona.maybe.MaybeLong;
-import net.xeona.maybe.MaybeShort;
 
+@SuppressWarnings("unchecked")
 public class MaybeTest {
 
 	@Test
-	public void verifyMaybeOfValueIsJustValue() {
+	public void maybeValueIsJustValue() {
 		Object value = new Object();
 		assertThat(maybe(value), is(just(value)));
 	}
 
 	@Test
-	public void verifyMaybeOfNullIsNothing() {
+	public void maybeNullIsNothing() {
 		assertThat(maybe(null), is(nothing()));
 	}
 
 	@Test(expected = NullPointerException.class)
-	public void verifyThrowsNullPointerExceptionOnJustNull() {
+	public void justNullThrowsNullPointerException() {
 		just(null);
 	}
 
 	@Test
-	public void verifyJustIsPresent() {
-		assertThat(just(new Object()).isPresent(), is(true));
+	public void justIsPresent() {
+		assertTrue(just(new Object()).isPresent());
 	}
 
 	@Test
-	public void verifyGetOnJustReturnsValue() {
+	public void getOnJustReturnsValue() {
 		Object value = new Object();
 		assertThat(just(value).get(), is(value));
 	}
 
 	@Test
-	public void verifyValueReturnedWhenOrElseInvokedOnJust() {
+	public void orElseOnJustReturnsValue() {
 		Object value = new Object();
 		Maybe<Object> maybe = just(value);
 
@@ -88,8 +87,7 @@ public class MaybeTest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyValueReturnedWhenOrElseGetInvokedOnJust() {
+	public void orElseGetOnJustReturnsValueAndDoesNotInvokeProvider() {
 		Object value = new Object();
 		Maybe<Object> maybe = just(value);
 
@@ -101,23 +99,7 @@ public class MaybeTest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyNoExceptionThrownOnOrElseGetWithThrowingProviderOnJust() {
-		Maybe<Object> maybe = just(new Object());
-
-		try {
-			Provider<Object, Exception> providerMock = mock(Provider.class);
-			when(providerMock.get()).thenThrow(Exception.class);
-
-			maybe.orElseGet(providerMock);
-		} catch (Exception e) {
-			fail();
-		}
-	}
-
-	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyValueReturnedWhenOrElseThrowInvokedOnJust() {
+	public void orElseThrowOnJustReturnsValueAndDoesNotInvokeProvider() {
 		Object value = new Object();
 		Maybe<Object> maybe = just(value);
 
@@ -129,23 +111,7 @@ public class MaybeTest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyNoExceptionThrownOnOrElseThrowWithThrowingProviderOnJust() {
-		Maybe<Object> maybe = just(new Object());
-
-		try {
-			Provider<RuntimeException, Exception> providerMock = mock(Provider.class);
-			when(providerMock.get()).thenThrow(Exception.class);
-
-			maybe.orElseThrow(providerMock);
-		} catch (Exception e) {
-			fail();
-		}
-	}
-
-	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyIfPresentOnJustIsInvokedWithValue() {
+	public void ifPresentOnJustInvokesConsumerWithValue() {
 		Object value = new Object();
 		Maybe<Object> maybe = just(value);
 
@@ -158,8 +124,12 @@ public class MaybeTest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyFunctionNotInvokedOnIfAbsentOnJust() {
+	public void ifPresentOnJustWithThrowingConsumerPropagatesThrownException() {
+		consumerInvocationOnJustWithThrowingConsumerPropagatesThrownException(Maybe::ifPresent);
+	}
+
+	@Test
+	public void ifAbsentOnJustDoesNotInvokeFunction() {
 		Maybe<Object> maybe = just(new Object());
 
 		VoidFunction<RuntimeException> functionMock = mock(VoidFunction.class);
@@ -170,8 +140,7 @@ public class MaybeTest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyIfPresentInvokedOnByPresenceOnJust() {
+	public void byPresenceOnJustInvokesIfPresentConsumerWithValueAndDoesNotInvokeIfAbsentFunction() {
 		Object value = new Object();
 		Maybe<Object> maybe = just(value);
 
@@ -185,293 +154,220 @@ public class MaybeTest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyFilterOnJustWithAcceptingPredicateIsJust() {
-		Object value = new Object();
-		Maybe<Object> maybe = just(value);
-
-		ToBooleanFunction<Object, RuntimeException> predicateMock = mock(ToBooleanFunction.class);
-		when(predicateMock.apply(value)).thenReturn(true);
-
-		Maybe<Object> filteredMaybe = maybe.filter(predicateMock);
-
-		assertThat(filteredMaybe, is(just(value)));
-
-		verify(predicateMock).apply(value);
-		verifyNoMoreInteractions(predicateMock);
+	public void byPresenceOnJustWithThrowingIfPresentConsumerPropagatesThrownException() {
+		consumerInvocationOnJustWithThrowingConsumerPropagatesThrownException(
+				(maybe, consumer) -> maybe.byPresence(consumer, mock(VoidFunction.class)));
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyFilterOnJustWithRejectingPredicateIsNothing() {
-		Object value = new Object();
-		Maybe<Object> maybe = just(value);
-
-		ToBooleanFunction<Object, RuntimeException> predicateMock = mock(ToBooleanFunction.class);
-		when(predicateMock.apply(value)).thenReturn(false);
-
-		Maybe<Object> filteredMaybe = maybe.filter(predicateMock);
-
-		assertThat(filteredMaybe, is(nothing()));
-
-		verify(predicateMock).apply(value);
-		verifyNoMoreInteractions(predicateMock);
+	public void filterOnJustWithAcceptingPredicateInvokesPredicateWithValueAndReturnsJustValue() {
+		MaybeTest
+				.<ToBooleanFunction<Object, RuntimeException>, Boolean, Maybe<Object>> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
+						Maybe::filter, ToBooleanFunction.class, ToBooleanFunction::apply, true,
+						(value, functionReturnValue) -> functionReturnValue ? Maybe.just(value) : Maybe.nothing());
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyExceptionPropogatesOnFilterWithThrowingPredicateOnJust() {
-		Object value = new Object();
-		Maybe<Object> maybe = just(value);
-
-		Exception exception = new Exception();
-
-		try {
-			ToBooleanFunction<Object, Exception> predicateMock = mock(ToBooleanFunction.class);
-			when(predicateMock.apply(value)).thenThrow(exception);
-
-			maybe.filter(predicateMock);
-			fail();
-		} catch (Exception e) {
-			assertThat(e, is(sameInstance(exception)));
-		}
+	public void filterOnJustWithRejectingPredicateInvokesPredicateWithValueAndReturnsNothing() {
+		MaybeTest
+				.<ToBooleanFunction<Object, RuntimeException>, Boolean, Maybe<Object>> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
+						Maybe::filter, ToBooleanFunction.class, ToBooleanFunction::apply, false,
+						(value, functionReturnValue) -> functionReturnValue ? Maybe.just(value) : Maybe.nothing());
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyMapToBooleanOnJustIsJustBoolean() {
-		try {
-			verifyMapOnJustIsJustValue(ToBooleanFunction.class, true,
-					(functionMock, value) -> functionMock.apply(value), Maybe::mapToBoolean, MaybeBoolean::just);
-		} catch (Throwable t) {
-			fail();
-		}
+	public void filterOnJustWithThrowingPredicatePropagatesException() {
+		MaybeTest
+				.<ToBooleanFunction<Object, RuntimeException>> functionInvocationOnJustWithThrowingFunctionPropagatesThrownException(
+						Maybe::filter, ToBooleanFunction.class, ToBooleanFunction::apply);
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyExceptionPropogatesOnMapToBooleanWithThrowingFunctionOnJust() {
-		try {
-			verifyExceptionPropogatesOnInvocationOnJust(ToBooleanFunction.class,
-					(functionMock, value) -> functionMock.apply(value), Maybe::mapToBoolean);
-		} catch (Throwable t) {
-			fail();
-		}
+	public void mapToBooleanOnJustInvokesMapFunctionAndReturnsJustBooleanOfFunctionReturnValue() {
+		MaybeTest
+				.<ToBooleanFunction<Object, RuntimeException>, Boolean, MaybeBoolean> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
+						Maybe::mapToBoolean, ToBooleanFunction.class, ToBooleanFunction::apply, true,
+						(value, functionReturnValue) -> MaybeBoolean.just(functionReturnValue));
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyMapToCharOnJustIsJustChar() {
-		try {
-			verifyMapOnJustIsJustValue(ToCharFunction.class, 'a', (functionMock, value) -> functionMock.apply(value),
-					Maybe::mapToChar, MaybeChar::just);
-		} catch (Throwable t) {
-			fail();
-		}
+	public void mapToBooleanOnJustWithThrowingMapFunctionPropagatesThrownException() {
+		MaybeTest
+				.<ToBooleanFunction<Object, RuntimeException>> functionInvocationOnJustWithThrowingFunctionPropagatesThrownException(
+						Maybe::mapToBoolean, ToBooleanFunction.class, ToBooleanFunction::apply);
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyExceptionPropogatesOnMapToCharWithThrowingFunctionOnJust() {
-		try {
-			verifyExceptionPropogatesOnInvocationOnJust(ToCharFunction.class,
-					(functionMock, value) -> functionMock.apply(value), Maybe::mapToChar);
-		} catch (Throwable t) {
-			fail();
-		}
+	public void mapToCharOnJustInvokesMapFunctionAndReturnsJustCharOfFunctionReturnValue() {
+		MaybeTest
+				.<ToCharFunction<Object, RuntimeException>, Character, MaybeChar> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
+						Maybe::mapToChar, ToCharFunction.class, ToCharFunction::apply, 'a',
+						(value, functionReturnValue) -> MaybeChar.just(functionReturnValue));
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyMapToShortOnJustIsJustShort() {
-		try {
-			verifyMapOnJustIsJustValue(ToShortFunction.class, (short) 42,
-					(functionMock, value) -> functionMock.apply(value), Maybe::mapToShort, MaybeShort::just);
-		} catch (Throwable t) {
-			fail();
-		}
+	public void mapToCharOnJustWithThrowingMapFunctionPropagatesThrownException() {
+		MaybeTest
+				.<ToCharFunction<Object, RuntimeException>> functionInvocationOnJustWithThrowingFunctionPropagatesThrownException(
+						Maybe::mapToChar, ToCharFunction.class, ToCharFunction::apply);
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyExceptionPropogatesOnMapToShortWithThrowingFunctionOnJust() {
-		try {
-			verifyExceptionPropogatesOnInvocationOnJust(ToShortFunction.class,
-					(functionMock, value) -> functionMock.apply(value), Maybe::mapToShort);
-		} catch (Throwable t) {
-			fail();
-		}
+	public void mapToByteOnJustInvokesMapFunctionAndReturnsJustByteOfFunctionReturnValue() {
+		MaybeTest
+				.<ToByteFunction<Object, RuntimeException>, Byte, MaybeByte> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
+						Maybe::mapToByte, ToByteFunction.class, ToByteFunction::apply, (byte) 42,
+						(value, functionReturnValue) -> MaybeByte.just(functionReturnValue));
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyMapToIntOnJustIsJustInt() {
-		try {
-			verifyMapOnJustIsJustValue(ToIntFunction.class, 42, (functionMock, value) -> functionMock.apply(value),
-					Maybe::mapToInt, MaybeInt::just);
-		} catch (Throwable t) {
-			fail();
-		}
+	public void mapToByteOnJustWithThrowingFunctionPropagatesThrownException() {
+		MaybeTest
+				.<ToByteFunction<Object, RuntimeException>> functionInvocationOnJustWithThrowingFunctionPropagatesThrownException(
+						Maybe::mapToByte, ToByteFunction.class, ToByteFunction::apply);
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyExceptionPropogatesOnMapToIntWithThrowingFunctionOnJust() {
-		try {
-			verifyExceptionPropogatesOnInvocationOnJust(ToIntFunction.class,
-					(functionMock, value) -> functionMock.apply(value), Maybe::mapToInt);
-		} catch (Throwable t) {
-			fail();
-		}
+	public void mapToShortOnJustInvokesMapFunctionAndReturnsJustShortOfFunctionReturnValue() {
+		MaybeTest
+				.<ToShortFunction<Object, RuntimeException>, Short, MaybeShort> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
+						Maybe::mapToShort, ToShortFunction.class, ToShortFunction::apply, (short) 42,
+						(value, functionReturnValue) -> MaybeShort.just(functionReturnValue));
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyMapToLongOnJustIsJustLong() {
-		try {
-			verifyMapOnJustIsJustValue(ToLongFunction.class, 42L, (functionMock, value) -> functionMock.apply(value),
-					Maybe::mapToLong, MaybeLong::just);
-		} catch (Throwable t) {
-			fail();
-		}
+	public void mapToShortOnJustWithThrowingFunctionPropagatesThrownException() {
+		MaybeTest
+				.<ToShortFunction<Object, RuntimeException>> functionInvocationOnJustWithThrowingFunctionPropagatesThrownException(
+						Maybe::mapToShort, ToShortFunction.class, ToShortFunction::apply);
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyExceptionPropogatesOnMapToLongWithThrowingFunctionOnJust() {
-		try {
-			verifyExceptionPropogatesOnInvocationOnJust(ToLongFunction.class,
-					(functionMock, value) -> functionMock.apply(value),
-					(maybe, functionMock) -> maybe.mapToLong(functionMock));
-		} catch (Throwable t) {
-			fail();
-		}
+	public void mapToIntOnJustInvokesMapFunctionAndReturnsJustIntOfFunctionReturnValue() {
+		MaybeTest
+				.<ToIntFunction<Object, RuntimeException>, Integer, MaybeInt> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
+						Maybe::mapToInt, ToIntFunction.class, ToIntFunction::apply, 42,
+						(value, functionReturnValue) -> MaybeInt.just(functionReturnValue));
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyMapToFloatOnJustIsJustFloat() {
-		try {
-			verifyMapOnJustIsJustValue(ToFloatFunction.class, 42F, (functionMock, value) -> functionMock.apply(value),
-					Maybe::mapToFloat, MaybeFloat::just);
-		} catch (Throwable t) {
-			fail();
-		}
+	public void mapToIntOnJustWithThrowingFunctionPropagatesThrownException() {
+		MaybeTest
+				.<ToIntFunction<Object, RuntimeException>> functionInvocationOnJustWithThrowingFunctionPropagatesThrownException(
+						Maybe::mapToInt, ToIntFunction.class, ToIntFunction::apply);
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyExceptionPropogatesOnMapToFloatWithThrowingFunctionOnJust() {
-		try {
-			verifyExceptionPropogatesOnInvocationOnJust(ToFloatFunction.class,
-					(functionMock, value) -> functionMock.apply(value), Maybe::mapToFloat);
-		} catch (Throwable t) {
-			fail();
-		}
+	public void mapToLongOnJustInvokesMapFunctionAndReturnsJustLongOfFunctionReturnValue() {
+		MaybeTest
+				.<ToLongFunction<Object, RuntimeException>, Long, MaybeLong> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
+						Maybe::mapToLong, ToLongFunction.class, ToLongFunction::apply, 42L,
+						(value, functionReturnValue) -> MaybeLong.just(functionReturnValue));
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyMapToDoubleOnJustIsJustDouble() {
-		try {
-			verifyMapOnJustIsJustValue(ToDoubleFunction.class, 42.0, (functionMock, value) -> functionMock.apply(value),
-					Maybe::mapToDouble, MaybeDouble::just);
-		} catch (Throwable t) {
-			fail();
-		}
+	public void mapToLongOnJustWithThrowingFunctionPropagatesThrownException() {
+		MaybeTest
+				.<ToLongFunction<Object, RuntimeException>> functionInvocationOnJustWithThrowingFunctionPropagatesThrownException(
+						Maybe::mapToLong, ToLongFunction.class, ToLongFunction::apply);
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyExceptionPropogatesOnMapToDoubleWithThrowingFunctionOnJust() {
-		try {
-			verifyExceptionPropogatesOnInvocationOnJust(ToDoubleFunction.class,
-					(functionMock, value) -> functionMock.apply(value), Maybe::mapToDouble);
-		} catch (Throwable t) {
-			fail();
-		}
+	public void mapToFloatOnJustInvokesMapFunctionAndReturnsJustFloatOfFunctionReturnValue() {
+		MaybeTest
+				.<ToFloatFunction<Object, RuntimeException>, Float, MaybeFloat> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
+						Maybe::mapToFloat, ToFloatFunction.class, ToFloatFunction::apply, 42F,
+						(value, functionReturnValue) -> MaybeFloat.just(functionReturnValue));
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyFunctionAppliedWhenMapInvokedOnJust() {
-		Object value = new Object();
-		Maybe<Object> maybe = just(value);
-
-		Function<Object, Object, RuntimeException> functionMock = Mockito.mock(Function.class);
-		Object mappedValue = new Object();
-		when(functionMock.apply(value)).thenReturn(mappedValue);
-
-		Maybe<Object> mappedMaybe = maybe.map(functionMock);
-
-		assertThat(mappedMaybe, is(just(mappedValue)));
-
-		verify(functionMock).apply(value);
-		verifyNoMoreInteractions(functionMock);
+	public void mapToFloatOnJustWithThrowingFunctionPropagatesThrownException() {
+		MaybeTest
+				.<ToFloatFunction<Object, RuntimeException>> functionInvocationOnJustWithThrowingFunctionPropagatesThrownException(
+						Maybe::mapToFloat, ToFloatFunction.class, (functionMock, value) -> functionMock.apply(value));
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyExceptionPropogatesOnMapWithThrowingFunctionOnJust() {
-		try {
-			verifyExceptionPropogatesOnInvocationOnJust(Function.class, (function, value) -> function.apply(value),
-					Maybe::map);
-		} catch (Throwable t) {
-			fail();
-		}
+	public void mapToDoubleOnJustInvokesMapFunctionAndReturnsJustDoubleOfFunctionReturnValue() {
+		MaybeTest
+				.<ToDoubleFunction<Object, RuntimeException>, Double, MaybeDouble> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
+						Maybe::mapToDouble, ToDoubleFunction.class, ToDoubleFunction::apply, 42.0,
+						(value, functionReturnValue) -> MaybeDouble.just(functionReturnValue));
 	}
 
 	@Test
-	public void verifyJustNotEmpty() {
+	public void mapToDoubleOnJustWithThrowingFunctionPropagatesThrownException() {
+		MaybeTest
+				.<ToDoubleFunction<Object, RuntimeException>> functionInvocationOnJustWithThrowingFunctionPropagatesThrownException(
+						Maybe::mapToDouble, ToDoubleFunction.class, (functionMock, value) -> functionMock.apply(value));
+	}
+
+	@Test
+	public void mapOnJustInvokesMapFunctionAndReturnsJustOfFunctionReturnValue() {
+		MaybeTest
+				.<Function<Object, Object, RuntimeException>, Object, Maybe<Object>> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
+						Maybe::map, Function.class, Function::apply, new Object(),
+						(value, functionReturnValue) -> Maybe.just(functionReturnValue));
+	}
+
+	@Test
+	public void mapOnJustWithThrowingFunctionPropagatesThrownException() {
+		MaybeTest
+				.<Function<Object, Object, RuntimeException>> functionInvocationOnJustWithThrowingFunctionPropagatesThrownException(
+						Maybe::map, Function.class, (function, value) -> function.apply(value));
+	}
+
+	@Test
+	public void justIsNotEmpty() {
 		assertThat(just(new Object()), not(empty()));
 	}
 
 	@Test
-	public void verifyJustHasSize1() {
+	public void justHasSize1() {
 		assertThat(just(new Object()), hasSize(1));
 	}
 
 	@Test
-	public void verifyJustContainsItsValue() {
+	public void justContainsOwnValue() {
 		Object value = new Object();
 		Maybe<Object> maybe = just(value);
 
-		assertThat(maybe.contains(value), is(true));
+		assertTrue(maybe.contains(value));
 	}
 
 	@Test
-	public void verifyJustDoesNotContainOtherValue() {
+	public void justDoesNotContainOtherValue() {
 		Maybe<Object> maybe = just(new Object());
-		assertThat(maybe.contains(new Object()), is(false));
+		assertFalse(maybe.contains(new Object()));
 	}
 
 	@Test
-	public void verifyJustContainsAllOfEmptyCollection() {
-		assertThat(just(new Object()).containsAll(Collections.emptySet()), is(true));
+	public void justContainsAllOfEmptyCollection() {
+		assertTrue(just(new Object()).containsAll(emptySet()));
 	}
 
 	@Test
-	public void verifyJustContainsAllOfCollectionContainingOnlyValue() {
+	public void justContainsAllOfCollectionContainingOnlyOwnValue() {
 		Object value = new Object();
 		Maybe<Object> maybe = just(value);
 
 		List<Object> collection = Arrays.asList(value, value);
 
-		assertThat(maybe.containsAll(collection), is(true));
+		assertTrue(maybe.containsAll(collection));
 	}
 
 	@Test
-	public void verifyJustDoesNotContainAllOfCollectionContainingOtherValues() {
+	public void justDoesNotContainAllOfCollectionContainingOtherValue() {
 		Object value = new Object();
 		Maybe<Object> maybe = just(value);
 
 		List<Object> collection = Arrays.asList(value, new Object());
 
-		assertThat(maybe.containsAll(collection), is(false));
+		assertFalse(maybe.containsAll(collection));
 	}
 
 	@Test
-	public void verifyJustToArrayReturnsSingleElementArray() {
+	public void justToArrayReturnsSingleElementArrayContainingValue() {
 		Object value = new Object();
 		Maybe<Object> maybe = just(value);
 
@@ -479,7 +375,7 @@ public class MaybeTest {
 	}
 
 	@Test(expected = NoSuchElementException.class)
-	public void verifyJustIteratorContainsSingleElement() {
+	public void justIteratorIteratesOverSingleElement() {
 		Object value = new Object();
 		Maybe<Object> maybe = just(value);
 
@@ -492,29 +388,92 @@ public class MaybeTest {
 	}
 
 	@Test(expected = UnsupportedOperationException.class)
-	public void verifyUnsupportedOperationExceptionThrownOnAdd() {
+	public void justIteratorDoesNotSupportRemoval() {
 		Maybe<Object> maybe = just(new Object());
-		maybe.add(new Object());
-	}
-	
-	@Test
-	public void verifyUnsupportedOperationExceptionThrownOnAddAll() {
-		
+		Iterator<Object> iterator = maybe.iterator();
+		iterator.remove();
 	}
 
 	@Test
-	public void verifyNothingIsNotPresent() {
-		assertThat(nothing().isPresent(), is(false));
+	public void addOnJustThrowsUnsupportedOperationExceptionAndDoesNotMutateTarget() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+		try {
+			maybe.add(value);
+			fail();
+		} catch (UnsupportedOperationException e) {
+			assertThat(maybe, is(just(value)));
+		}
+	}
+
+	@Test
+	public void addAllOfEmptyCollectionOnJustDoesNotMutateTarget() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+
+		assertFalse(maybe.addAll(emptySet()));
+		assertThat(maybe, is(just(value)));
+	}
+
+	@Test
+	public void addAllOfPopulatedCollectionOnJustThrowsUnsupportedOperationExceptionAndDoesNotMutateTarget() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+		try {
+			maybe.addAll(singleton(value));
+			fail();
+		} catch (UnsupportedOperationException e) {
+			assertThat(maybe, is(just(value)));
+		}
+	}
+
+	@Test
+	public void removeOnJustWithValueOfJustThrowsUnsupportedOperationExceptionAndDoesNotMutateTarget() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+
+		try {
+			maybe.remove(value);
+			fail();
+		} catch (UnsupportedOperationException e) {
+			assertThat(maybe, is(just(value)));
+		}
+	}
+
+	@Test
+	public void removeOnJustWIthOtherValueDOesNotMutateTarget() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+
+		assertThat(maybe.remove(new Object()), is(false));
+		assertThat(maybe, is(just(value)));
+	}
+
+	@Test
+	public void clearOnJustThrowsUnsupportedOperationExceptionAndDoesNotMutateTarget() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+
+		try {
+			maybe.clear();
+			fail();
+		} catch (UnsupportedOperationException e) {
+			assertThat(maybe, is(just(value)));
+		}
+	}
+
+	@Test
+	public void nothingIsNotPresent() {
+		assertFalse(nothing().isPresent());
 	}
 
 	@Test(expected = NoSuchElementException.class)
-	public void verifyThrowNoSuchElementExceptionWhenGetInvokedOnNothing() {
+	public void getOnNothingThrowsNoSuchElementException() {
 		nothing().get();
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyConsumerNotInvokedWhenIfPresentInvokedOnNothing() {
+	public void ifPresentOnNothingDoesNotInvokeConsumer() {
 		Maybe<Object> maybe = nothing();
 
 		Consumer<Object, RuntimeException> consumerMock = mock(Consumer.class);
@@ -525,8 +484,7 @@ public class MaybeTest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyNothingReturnedWhenFilterInvokedOnNothing() {
+	public void filterOnNothingReturnsNothingAndDoesNotInvokePredicate() {
 		Maybe<Object> maybe = nothing();
 
 		ToBooleanFunction<Object, RuntimeException> predicateMock = mock(ToBooleanFunction.class);
@@ -537,8 +495,7 @@ public class MaybeTest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyNothingReturnedWhenMapInvokedOnNothing() {
+	public void mapOnNothingReturnsNothingAndDoesNotInvokeMapFunction() {
 		Maybe<Object> maybe = nothing();
 
 		Function<Object, Object, RuntimeException> functionMock = mock(Function.class);
@@ -549,7 +506,7 @@ public class MaybeTest {
 	}
 
 	@Test
-	public void verifyOtherReturnedWhenOrElseInvokedOnNothing() {
+	public void orElseOnNothingReturnsElse() {
 		Maybe<Object> maybe = nothing();
 
 		Object value = new Object();
@@ -558,8 +515,7 @@ public class MaybeTest {
 	}
 
 	@Test
-	@SuppressWarnings("unchecked")
-	public void verifyProviderInvokedWhenOrElseGetInvokedOnNothing() {
+	public void orElseGetOnNothingInvokesProviderAndReturnsProvidedValue() {
 		Maybe<Object> maybe = nothing();
 
 		Object value = new Object();
@@ -572,70 +528,97 @@ public class MaybeTest {
 		verifyNoMoreInteractions(providerMock);
 	}
 
-	@Test(expected = RuntimeException.class)
-	@SuppressWarnings("unchecked")
-	public void verifyThrowsExceptionWhenProviderThrowsExceptionOnOrElseGetInvokedOnNothing() {
+	public void orElseGetWithThrowingProviderPropagatesThrownExcetpion() {
 		Maybe<Object> maybe = nothing();
 
-		Provider<Object, RuntimeException> providerMock = mock(Provider.class);
-		when(providerMock.get()).thenThrow(RuntimeException.class);
+		RuntimeException runtimeException = new RuntimeException();
 
-		maybe.orElseGet(providerMock);
+		Provider<Object, RuntimeException> providerMock = mock(Provider.class);
+		when(providerMock.get()).thenThrow(runtimeException);
+
+		try {
+			maybe.orElseGet(providerMock);
+			fail();
+		} catch (RuntimeException e) {
+			assertThat(e, is(sameInstance(runtimeException)));
+		}
 	}
 
 	@Test
-	public void verifyNothingIsEmpty() {
+	public void nothingIsEmpty() {
 		assertThat(nothing(), empty());
 	}
 
 	@Test
-	public void verifyNothingHasSize0() {
+	public void nothingHasSize0() {
 		assertThat(nothing(), hasSize(0));
 	}
 
 	@Test
-	public void verifyConvertPopulatedOptionalToJust() {
+	public void maybeFromPopualtedOptionalIsJustValue() {
 		Object value = new Object();
-		assertThat(Maybe.fromOptional(Optional.of(value)), is(just(value)));
+		assertThat(fromOptional(Optional.of(value)), is(just(value)));
 	}
 
 	@Test
-	public void verifyConvertEmptyOptionalToNothing() {
-		assertThat(Maybe.fromOptional(Optional.empty()), is(nothing()));
+	public void maybeFromEmptyOptionalIsNothing() {
+		assertThat(fromOptional(Optional.empty()), is(nothing()));
 	}
 
 	@Test
-	public void verifyConvertJustToPopulatedOptional() {
+	public void justToOptionalIsOptionalOfValue() {
 		Object value = new Object();
-		assertThat(Maybe.toOptional(just(value)), is(Optional.of(value)));
+		assertThat(toOptional(just(value)), is(Optional.of(value)));
 	}
 
 	@Test
-	public void verifyConvertNothingToEmptyOptional() {
-		assertThat(Maybe.toOptional(nothing()), is(Optional.empty()));
+	public void nothingToOptionalIsEmptyOptional() {
+		assertThat(toOptional(nothing()), is(Optional.empty()));
 	}
 
-	@SuppressWarnings("unchecked")
-	private static <F, T, M, X extends Throwable> void verifyMapOnJustIsJustValue(Class<? super F> functionClass,
-			T functionReturnValue, BinaryFunction<? super F, Object, T, ? extends X> functionApplication,
-			BinaryFunction<? super Maybe<Object>, ? super F, ? extends M, RuntimeException> mapApplication,
-			Function<? super T, ? extends M, RuntimeException> justFunction) throws X {
+	private static void consumerInvocationOnJustWithThrowingConsumerPropagatesThrownException(
+			BinaryConsumer<Maybe<Object>, Consumer<Object, Exception>, Exception> maybeInvocation) {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+
+		Exception exception = new Exception();
+
+		Consumer<Object, Exception> consumerMock = (Consumer<Object, Exception>) mock(Consumer.class);
+		try {
+			doThrow(exception).when(consumerMock).consume(value);
+		} catch (Exception e) {
+			fail();
+		}
+
+		try {
+			maybeInvocation.consume(maybe, consumerMock);
+			fail();
+		} catch (Exception e) {
+			assertThat(e, is(sameInstance(exception)));
+		}
+	}
+
+	private static <F, T, M> void functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
+			BinaryFunction<Maybe<Object>, F, M, RuntimeException> maybeFunctionApplication, Class<?> functionClass,
+			BinaryFunction<F, Object, T, RuntimeException> functionApplication, T functionReturnValue,
+			BinaryFunction<Object, T, M, RuntimeException> targetReturnValueFunction) {
 		Object value = new Object();
 		Maybe<Object> maybe = just(value);
 
 		F functionMock = (F) mock(functionClass);
 		when(functionApplication.apply(functionMock, value)).thenReturn(functionReturnValue);
 
-		assertThat(mapApplication.apply(maybe, functionMock), is(justFunction.apply(functionReturnValue)));
+		assertThat(maybeFunctionApplication.apply(maybe, functionMock),
+				is(targetReturnValueFunction.apply(value, functionReturnValue)));
 
 		functionApplication.apply(verify(functionMock), value);
 		verifyNoMoreInteractions(functionMock);
 	}
 
-	@SuppressWarnings("unchecked")
-	private static <F, X extends Throwable> void verifyExceptionPropogatesOnInvocationOnJust(
-			Class<? super F> functionClass, BinaryFunction<? super F, Object, ?, ? extends X> functionInvocation,
-			BinaryConsumer<Maybe<Object>, ? super F, RuntimeException> maybeInvocation) throws X {
+	private static <F> void functionInvocationOnJustWithThrowingFunctionPropagatesThrownException(
+			BinaryConsumer<? super Maybe<Object>, ? super F, ? extends RuntimeException> maybeInvocation,
+			Class<?> functionClass,
+			BinaryFunction<? super F, Object, ?, ? extends RuntimeException> functionInvocation) {
 		Object value = new Object();
 		Maybe<Object> maybe = just(value);
 
