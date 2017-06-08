@@ -1,5 +1,6 @@
 package net.xeona.maybe;
 
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static net.xeona.maybe.Maybe.fromOptional;
@@ -367,34 +368,6 @@ public class MaybeTest {
 	}
 
 	@Test
-	public void justToArrayReturnsSingleElementArrayContainingValue() {
-		Object value = new Object();
-		Maybe<Object> maybe = just(value);
-
-		assertThat(maybe.toArray(), is(arrayContaining(value)));
-	}
-
-	@Test(expected = NoSuchElementException.class)
-	public void justIteratorIteratesOverSingleElement() {
-		Object value = new Object();
-		Maybe<Object> maybe = just(value);
-
-		Iterator<Object> iterator = maybe.iterator();
-
-		assertThat(iterator.hasNext(), is(true));
-		assertThat(iterator.next(), is(value));
-		assertThat(iterator.hasNext(), is(false));
-		iterator.next();
-	}
-
-	@Test(expected = UnsupportedOperationException.class)
-	public void justIteratorDoesNotSupportRemoval() {
-		Maybe<Object> maybe = just(new Object());
-		Iterator<Object> iterator = maybe.iterator();
-		iterator.remove();
-	}
-
-	@Test
 	public void addOnJustThrowsUnsupportedOperationExceptionAndDoesNotMutateTarget() {
 		Object value = new Object();
 		Maybe<Object> maybe = just(value);
@@ -441,12 +414,56 @@ public class MaybeTest {
 	}
 
 	@Test
-	public void removeOnJustWIthOtherValueDOesNotMutateTarget() {
+	public void removeOnJustWithOtherValueDoesNotMutateTarget() {
 		Object value = new Object();
 		Maybe<Object> maybe = just(value);
 
 		assertThat(maybe.remove(new Object()), is(false));
 		assertThat(maybe, is(just(value)));
+	}
+
+	@Test
+	public void removeAllOnJustWithCollectionNotContainingValueDoesNotMutateTarget() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+
+		assertFalse(maybe.removeAll(asList(new Object(), new Object())));
+		assertThat(maybe, is(just(value)));
+	}
+
+	@Test
+	public void removeAllOnJustWithCollectionContainingValueThrowsUnsupportedOperationExceptionAndDoesNotMutateTarget() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+
+		try {
+			maybe.removeAll(singleton(value));
+			fail();
+		} catch (UnsupportedOperationException e) {
+			assertThat(maybe, is(just(value)));
+		}
+	}
+
+	@Test
+	public void retainAllOnJustWithCollectionContainingValueDoesNotMutateTarget() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+
+		assertFalse(maybe.retainAll(asList(value, new Object())));
+		assertThat(maybe, is(just(value)));
+	}
+
+	@Test
+	public void retainAllOnJustWithCollectionNotContainingValueThrowsUnsupportedOperationExceptionAndDoesNotMutateTarget() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+
+		try {
+			maybe.retainAll(emptySet());
+			fail();
+		} catch (UnsupportedOperationException e) {
+			assertThat(maybe, is(just(value)));
+		}
 	}
 
 	@Test
@@ -460,6 +477,100 @@ public class MaybeTest {
 		} catch (UnsupportedOperationException e) {
 			assertThat(maybe, is(just(value)));
 		}
+	}
+
+	@Test
+	public void justToArrayReturnsSingleElementArrayContainingValue() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+
+		assertThat(maybe.toArray(), is(arrayContaining(value)));
+	}
+
+	@Test
+	public void justToArrayWith0LengthArrayReturnsSingleElementArrayContainingValue() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+
+		assertThat(maybe.toArray(new Object[0]), is(arrayContaining(value)));
+	}
+
+	@Test
+	public void justToArrayWith1LengthArrayReturnsSingleElementArrayContainingValue() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+
+		assertThat(maybe.toArray(new Object[] { new Object() }), is(arrayContaining(value)));
+	}
+
+	@Test
+	public void justToArrayWithArrayOfLength2ReturnsArrayContainingValueAndNull() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+
+		assertThat(maybe.toArray(new Object[] { new Object(), new Object() }), is(arrayContaining(value, null)));
+	}
+
+	@Test
+	public void justToArrayWithArrayOfLengthGreaterThan2ReturnsArrayContainingValueThenNullThenRemainingArrayElements() {
+
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void justToArrayWithNullArrayThrowsNullPointerException() {
+		just(new Object()).toArray(null);
+	}
+
+	@Test(expected = NoSuchElementException.class)
+	public void justIteratorIteratesOverSingleElement() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+
+		Iterator<Object> iterator = maybe.iterator();
+
+		assertThat(iterator.hasNext(), is(true));
+		assertThat(iterator.next(), is(value));
+		assertThat(iterator.hasNext(), is(false));
+		iterator.next();
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void justIteratorDoesNotSupportRemoval() {
+		Maybe<Object> maybe = just(new Object());
+		Iterator<Object> iterator = maybe.iterator();
+		iterator.remove();
+	}
+
+	@Test
+	public void justHashCodeIsValueHashCode() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+
+		assertThat(maybe.hashCode(), is(value.hashCode()));
+	}
+
+	@Test
+	public void justEqualsJustOfSameValue() {
+		Object value = new Object();
+		assertThat(just(value), is(just(value)));
+	}
+
+	@Test
+	public void justDoesNotEqualJustOfDifferentValue() {
+		assertThat(just(new Object()), not(just(new Object())));
+	}
+
+	@Test
+	public void justDoesNotEqualArbitraryObject() {
+		assertThat(just(new Object()), not(new Object()));
+	}
+
+	@Test
+	public void justToStringDescribesValue() {
+		Object value = new Object();
+		Maybe<Object> maybe = just(value);
+
+		assertThat(maybe.toString(), is("Just [" + value + "]"));
 	}
 
 	@Test

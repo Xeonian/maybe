@@ -277,9 +277,7 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 
 		@Override
 		public Object[] toArray() {
-			Object[] arr = new Object[1];
-			arr[0] = value;
-			return arr;
+			return new Object[] { value };
 		}
 
 		@Override
@@ -326,11 +324,6 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 		}
 
 		@Override
-		public String toString() {
-			return "Just [" + value + "]";
-		}
-
-		@Override
 		public int hashCode() {
 			return Objects.hashCode(value);
 		}
@@ -338,6 +331,11 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 		@Override
 		public boolean equals(Object other) {
 			return other instanceof Just && value.equals(((Just<?>) other).value);
+		}
+
+		@Override
+		public String toString() {
+			return "Just [" + value + "]";
 		}
 
 	}
