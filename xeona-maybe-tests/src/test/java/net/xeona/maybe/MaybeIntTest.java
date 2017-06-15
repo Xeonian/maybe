@@ -1,9 +1,14 @@
 package net.xeona.maybe;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 import static net.xeona.maybe.MaybeInt.justInt;
 import static net.xeona.maybe.MaybeInt.noInt;
+import static net.xeona.maybe.test.MaybeIntMatcher.isJustInt;
+import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -18,6 +23,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import org.junit.Test;
 
@@ -372,9 +380,206 @@ public class MaybeIntTest {
 		justInt(0).containsAll(null);
 	}
 
-	@Test
+	@Test(expected = UnsupportedOperationException.class)
 	public void addOnJustIntThrowsUnsupportedOperationExceptionAndDoesNotMutateTarget() {
+		int value = 0;
+		MaybeInt maybeInt = justInt(value);
+		try {
+			maybeInt.add(1);
+			fail();
+		} finally {
+			assertThat(maybeInt, isJustInt(value));
+		}
+	}
 
+	@Test
+	public void addAllOfEmptyCollectionOnJustIntDoesNotMutateTarget() {
+		int value = 0;
+		MaybeInt maybeInt = justInt(value);
+		assertFalse(maybeInt.addAll(emptySet()));
+		assertThat(maybeInt, isJustInt(value));
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void addAllOfPopulatedCollectionOnJustIntThrowsUnsupportedOperationExceptionAndDoesNotMutateTarget() {
+		int value = 0;
+		MaybeInt maybeInt = justInt(value);
+		try {
+			maybeInt.addAll(singleton(1));
+			fail();
+		} finally {
+			assertThat(maybeInt, isJustInt(value));
+		}
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void removeValueOnJustIntThrowsUnsupportedOperationExceptionAndDoesNotMutateTarget() {
+		int value = 0;
+		MaybeInt maybeInt = justInt(value);
+		try {
+			maybeInt.remove(value);
+			fail();
+		} finally {
+			assertThat(maybeInt, isJustInt(value));
+		}
+	}
+
+	@Test
+	public void removeOtherValueOnJustIntDoesNotMutateTarget() {
+		int value = 0;
+		MaybeInt maybeInt = justInt(value);
+		int otherValue = 42;
+		assertThat(value, is(not(equalTo(otherValue))));
+		assertFalse(maybeInt.remove(otherValue));
+		assertThat(maybeInt, isJustInt(value));
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void removeAllOfCollectionContainingValueOnJustIntThrowsUnsupportedOperationExceptionAndDoesNotMutateTarget() {
+		int value = 0;
+		MaybeInt maybeInt = justInt(value);
+		try {
+			maybeInt.removeAll(singleton(value));
+			fail();
+		} finally {
+			assertThat(maybeInt, isJustInt(value));
+		}
+	}
+
+	@Test
+	public void removeAllOfCollectionNotContainingValueOnJustIntDoesNotMutateTarget() {
+		int value = 0;
+		MaybeInt maybeInt = justInt(value);
+		Object otherValue = new Object();
+		assertThat(value, is(not(equalTo(otherValue))));
+		assertFalse(maybeInt.removeAll(singleton(otherValue)));
+		assertThat(maybeInt, isJustInt(value));
+	}
+
+	@Test
+	public void retainAllOfCollectionContainingValueOnJustIntDoesNotMutateTarget() {
+		int value = 0;
+		MaybeInt maybeInt = justInt(value);
+		assertFalse(maybeInt.retainAll(singleton(value)));
+		assertThat(maybeInt, isJustInt(value));
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void retainAllOfCollectionNotContainingValueOnJustIntThrowsUnsupportedOperationExceptionAndDoesNotMutateTarget() {
+		int value = 0;
+		MaybeInt maybeInt = justInt(value);
+		try {
+			maybeInt.retainAll(emptySet());
+			fail();
+		} finally {
+			assertThat(maybeInt, isJustInt(value));
+		}
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void clearOnJustIntThrowsUnsupportedOperationExceptionAndDoesNotMutateTarget() {
+		int value = 0;
+		MaybeInt maybeInt = justInt(value);
+		try {
+			maybeInt.clear();
+			fail();
+		} finally {
+			assertThat(maybeInt, isJustInt(value));
+		}
+	}
+
+	@Test
+	public void justIntToArrayReturnsSingleElementArrayContainingValue() {
+		int value = 0;
+		assertThat(justInt(value).toArray(), is(arrayContaining(value)));
+	}
+
+	@Test
+	public void justIntIteratorIteratesOverValue() {
+		int value = 0;
+		Iterator<Integer> iterator = justInt(value).iterator();
+
+		assertTrue(iterator.hasNext());
+		assertThat(iterator.next(), is(value));
+		assertFalse(iterator.hasNext());
+	}
+
+	@Test
+	public void hashCodeOfJustIntIsHashCodeOfValue() {
+		int value = 42;
+		assertThat(justInt(42).hashCode(), is(Integer.hashCode(value)));
+	}
+
+	@Test
+	public void justIntEqualsJustIntOfSameValue() {
+		int value = 42;
+		assertThat(justInt(value), is(justInt(value)));
+	}
+
+	@Test
+	public void justIntDoesNotEqualJustIntOfDifferentValue() {
+		assertThat(justInt(42), not(justInt(343)));
+	}
+
+	@Test
+	public void justIntDoesNotEqualArbitraryObject() {
+		assertThat(justInt(42), not(new Object()));
+	}
+
+	@Test
+	public void justIntToStringDescribesValue() {
+		int value = 42;
+		assertThat(justInt(value).toString(), is("JustInt [" + value + "]"));
+	}
+
+	@Test
+	public void noIntIsNotPresent() {
+		assertFalse(noInt().isPresent());
+	}
+
+	@Test(expected = NoSuchElementException.class)
+	public void getOnNoIntThrowsNoSuchElementException() {
+		noInt().get();
+	}
+
+	@Test
+	public void orElseOnNoIntReturnsAlternative() {
+		int alternative = 42;
+		assertThat(noInt().orElse(alternative), is(alternative));
+	}
+
+	@Test
+	public void orElseGetOnNothingInvokesProvider() {
+		IntProvider<RuntimeException> providerMock = mock(IntProvider.class);
+		noInt().orElseGet(providerMock);
+		verify(providerMock).get();
+		verifyNoMoreInteractions(providerMock);
+	}
+
+	@Test
+	public void orElseGetOnNothingReturnsProvidedValue() {
+		IntProvider<RuntimeException> providerMock = mock(IntProvider.class);
+		int providedValue = 42;
+		when(providerMock.get()).thenReturn(providedValue);
+		assertThat(noInt().orElseGet(providerMock), is(providedValue));
+	}
+
+	@Test
+	public void orElseGetOnNothingWithThrowingProviderPropagatesThrownException() {
+		IntProvider<RuntimeException> providerMock = mock(IntProvider.class);
+		RuntimeException runtimeException = new RuntimeException();
+		when(providerMock.get()).thenThrow(runtimeException);
+		try {
+			noInt().orElseGet(providerMock);
+			fail();
+		} catch (RuntimeException e) {
+			assertThat(e, is(sameInstance(runtimeException)));
+		}
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void orElseGetOnNothingWithNullProviderThrowsNullPointerException() {
+		noInt().orElseGet(null);
 	}
 
 	private static void consumerInvocationOnJustIntWithThrowingConsumerPropagatesThrownException(

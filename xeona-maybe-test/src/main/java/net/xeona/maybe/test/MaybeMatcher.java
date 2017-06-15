@@ -1,4 +1,4 @@
-package net.xeona.maybe;
+package net.xeona.maybe.test;
 
 import static java.util.Objects.requireNonNull;
 import static net.xeona.maybe.Maybe.just;
@@ -8,6 +8,8 @@ import static org.hamcrest.Matchers.equalTo;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+
+import net.xeona.maybe.Maybe;
 
 /**
  * An implementation of {@link Matcher} which matches instances of {@link Maybe}

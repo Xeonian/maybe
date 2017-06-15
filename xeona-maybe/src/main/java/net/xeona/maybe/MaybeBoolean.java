@@ -1,5 +1,7 @@
 package net.xeona.maybe;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,15 +20,9 @@ public abstract class MaybeBoolean implements Collection<Boolean>, Serializable 
 
 	private MaybeBoolean() {}
 
-	public abstract boolean get();
-
 	public abstract boolean isPresent();
 
-	public abstract <X extends Throwable> void ifPresent(BooleanConsumer<? extends X> consumer) throws X;
-
-	public abstract MaybeBoolean filter(BooleanUnaryOperator predicate);
-
-	public abstract <T, X extends Throwable> Maybe<T> map(BooleanFunction<? extends T, ? extends X> function) throws X;
+	public abstract boolean get();
 
 	public abstract boolean orElse(boolean other);
 
@@ -34,6 +30,15 @@ public abstract class MaybeBoolean implements Collection<Boolean>, Serializable 
 
 	public abstract <X extends Throwable> boolean orElseThrow(Provider<? extends X, RuntimeException> provider)
 			throws X;
+
+	public abstract <X extends Throwable> void ifPresent(BooleanConsumer<? extends X> consumer) throws X;
+
+	public abstract <X extends Throwable> MaybeBoolean filter(BooleanUnaryOperator<? extends X> predicate) throws X;
+
+	public abstract <X extends Throwable> MaybeBoolean mapToBoolean(BooleanUnaryOperator<? extends X> function)
+			throws X;
+
+	public abstract <T, X extends Throwable> Maybe<T> map(BooleanFunction<? extends T, ? extends X> function) throws X;
 
 	@Override
 	public boolean add(Boolean element) {
@@ -102,8 +107,13 @@ public abstract class MaybeBoolean implements Collection<Boolean>, Serializable 
 		}
 
 		@Override
-		public MaybeBoolean filter(BooleanUnaryOperator predicate) {
+		public <X extends Throwable> MaybeBoolean filter(BooleanUnaryOperator<? extends X> predicate) throws X {
 			return predicate.apply(value) ? this : Nothing.INSTANCE;
+		}
+
+		@Override
+		public <X extends Throwable> MaybeBoolean mapToBoolean(BooleanUnaryOperator<? extends X> function) throws X {
+			return MaybeBoolean.just(requireNonNull(function, "Function must not be null").apply(value));
 		}
 
 		@Override
@@ -246,7 +256,12 @@ public abstract class MaybeBoolean implements Collection<Boolean>, Serializable 
 		public <X extends Throwable> void ifPresent(BooleanConsumer<? extends X> consumer) {}
 
 		@Override
-		public MaybeBoolean filter(BooleanUnaryOperator predicate) {
+		public <X extends Throwable> MaybeBoolean filter(BooleanUnaryOperator<? extends X> predicate) {
+			return INSTANCE;
+		}
+
+		@Override
+		public <X extends Throwable> MaybeBoolean mapToBoolean(BooleanUnaryOperator<? extends X> function) {
 			return INSTANCE;
 		}
 

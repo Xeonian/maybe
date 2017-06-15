@@ -9,8 +9,8 @@ import static net.xeona.maybe.Maybe.maybe;
 import static net.xeona.maybe.Maybe.nothing;
 import static net.xeona.maybe.Maybe.reduce;
 import static net.xeona.maybe.Maybe.toOptional;
-import static net.xeona.maybe.MaybeMatcher.isJust;
-import static net.xeona.maybe.MaybeMatcher.isNothing;
+import static net.xeona.maybe.test.MaybeMatcher.isJust;
+import static net.xeona.maybe.test.MaybeMatcher.isNothing;
 import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.arrayWithSize;
 import static org.hamcrest.Matchers.empty;
@@ -517,7 +517,7 @@ public class MaybeTest {
 
 	@Test
 	public void justToArrayWithArrayOfLengthGreaterThan2ReturnsArrayContainingValueThenNullThenRemainingArrayElements() {
-
+		// TODO
 	}
 
 	@Test(expected = NullPointerException.class)
@@ -624,7 +624,7 @@ public class MaybeTest {
 	}
 
 	@Test(expected = NullPointerException.class)
-	public void orElseGetOnNothingWIthNullProviderThrowsNullPointerException() {
+	public void orElseGetOnNothingWithNullProviderThrowsNullPointerException() {
 		nothing().orElseGet(null);
 	}
 
