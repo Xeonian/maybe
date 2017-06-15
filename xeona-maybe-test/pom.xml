@@ -4,22 +4,15 @@
 
 	<parent>
 		<groupId>net.xeona</groupId>
-		<artifactId>xeona-parent</artifactId>
+		<artifactId>xeona-maybe-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>xeona-maybe-parent</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<packaging>pom</packaging>
+	<artifactId>xeona-maybe-test</artifactId>
+	<packaging>jar</packaging>
 
-	<name>Xeona Maybe Parent</name>
-	<description>Parent POM for projects under the Xeona Maybe family</description>
-
-	<modules>
-		<module>xeona-maybe</module>
-		<module>xeona-maybe-test</module>
-		<module>xeona-maybe-tests</module>
-	</modules>
+	<name>Xeona Maybe Test</name>
+	<description>Test utilities for use with the Xeona Maybe library</description>
 
 	<build>
 		<plugins>
@@ -47,4 +40,17 @@
 		</plugins>
 	</build>
 
+	<dependencies>
+		<dependency>
+			<groupId>net.xeona</groupId>
+			<artifactId>xeona-maybe</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest-all</artifactId>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
 </project>

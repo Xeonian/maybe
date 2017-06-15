@@ -366,7 +366,7 @@ public class MaybeTest {
 		assertFalse(just(value).containsAll(asList(value, new Object())));
 	}
 
-	@Test
+	@Test(expected = NullPointerException.class)
 	public void justContainsAllOfNullCollectionThrowsNullPointerException() {
 		just(new Object()).containsAll(null);
 	}

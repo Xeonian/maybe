@@ -4,22 +4,15 @@
 
 	<parent>
 		<groupId>net.xeona</groupId>
-		<artifactId>xeona-parent</artifactId>
+		<artifactId>xeona-maybe-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>xeona-maybe-parent</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<packaging>pom</packaging>
+	<artifactId>xeona-maybe</artifactId>
+	<packaging>jar</packaging>
 
-	<name>Xeona Maybe Parent</name>
-	<description>Parent POM for projects under the Xeona Maybe family</description>
-
-	<modules>
-		<module>xeona-maybe</module>
-		<module>xeona-maybe-test</module>
-		<module>xeona-maybe-tests</module>
-	</modules>
+	<name>Xeona Maybe</name>
+	<description>Alternative implementation for optional data types</description>
 
 	<build>
 		<plugins>
@@ -47,4 +40,11 @@
 		</plugins>
 	</build>
 
+	<dependencies>
+		<dependency>
+			<groupId>net.xeona</groupId>
+			<artifactId>xeona-functional-interfaces</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
 </project>
