@@ -7,8 +7,12 @@ import static net.xeona.maybe.Maybe.fromOptional;
 import static net.xeona.maybe.Maybe.just;
 import static net.xeona.maybe.Maybe.maybe;
 import static net.xeona.maybe.Maybe.nothing;
+import static net.xeona.maybe.Maybe.reduce;
 import static net.xeona.maybe.Maybe.toOptional;
+import static net.xeona.maybe.MaybeMatcher.isJust;
+import static net.xeona.maybe.MaybeMatcher.isNothing;
 import static org.hamcrest.Matchers.arrayContaining;
+import static org.hamcrest.Matchers.arrayWithSize;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -24,9 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -53,12 +55,12 @@ public class MaybeTest {
 	@Test
 	public void maybeValueIsJustValue() {
 		Object value = new Object();
-		assertThat(maybe(value), is(just(value)));
+		assertThat(maybe(value), isJust(value));
 	}
 
 	@Test
 	public void maybeNullIsNothing() {
-		assertThat(maybe(null), is(nothing()));
+		assertThat(maybe(null), isNothing());
 	}
 
 	@Test(expected = NullPointerException.class)
@@ -80,21 +82,15 @@ public class MaybeTest {
 	@Test
 	public void orElseOnJustReturnsValue() {
 		Object value = new Object();
-		Maybe<Object> maybe = just(value);
-
-		Object otherValue = new Object();
-
-		assertThat(maybe.orElse(otherValue), is(value));
+		assertThat(just(value).orElse(new Object()), is(value));
 	}
 
 	@Test
 	public void orElseGetOnJustReturnsValueAndDoesNotInvokeProvider() {
 		Object value = new Object();
-		Maybe<Object> maybe = just(value);
-
 		Provider<Object, RuntimeException> providerMock = mock(Provider.class);
 
-		assertThat(maybe.orElseGet(providerMock), is(value));
+		assertThat(just(value).orElseGet(providerMock), is(value));
 
 		verifyNoMoreInteractions(providerMock);
 	}
@@ -102,23 +98,18 @@ public class MaybeTest {
 	@Test
 	public void orElseThrowOnJustReturnsValueAndDoesNotInvokeProvider() {
 		Object value = new Object();
-		Maybe<Object> maybe = just(value);
-
 		Provider<RuntimeException, RuntimeException> providerMock = mock(Provider.class);
 
-		assertThat(maybe.orElseThrow(providerMock), is(value));
-
+		assertThat(just(value).orElseThrow(providerMock), is(value));
 		verifyNoMoreInteractions(providerMock);
 	}
 
 	@Test
 	public void ifPresentOnJustInvokesConsumerWithValue() {
 		Object value = new Object();
-		Maybe<Object> maybe = just(value);
-
 		Consumer<Object, RuntimeException> consumerMock = mock(Consumer.class);
 
-		maybe.ifPresent(consumerMock);
+		just(value).ifPresent(consumerMock);
 
 		verify(consumerMock).consume(value);
 		verifyNoMoreInteractions(consumerMock);
@@ -129,13 +120,16 @@ public class MaybeTest {
 		consumerInvocationOnJustWithThrowingConsumerPropagatesThrownException(Maybe::ifPresent);
 	}
 
+	@Test(expected = NullPointerException.class)
+	public void ifPresentOnJustWithNullConsumerThrowsNullPointerException() {
+		just(new Object()).ifPresent(null);
+	}
+
 	@Test
 	public void ifAbsentOnJustDoesNotInvokeFunction() {
-		Maybe<Object> maybe = just(new Object());
-
 		VoidFunction<RuntimeException> functionMock = mock(VoidFunction.class);
 
-		maybe.ifAbsent(functionMock);
+		just(new Object()).ifAbsent(functionMock);
 
 		verifyNoMoreInteractions(functionMock);
 	}
@@ -143,12 +137,10 @@ public class MaybeTest {
 	@Test
 	public void byPresenceOnJustInvokesIfPresentConsumerWithValueAndDoesNotInvokeIfAbsentFunction() {
 		Object value = new Object();
-		Maybe<Object> maybe = just(value);
-
 		Consumer<Object, RuntimeException> consumerMock = mock(Consumer.class);
 		VoidFunction<RuntimeException> functionMock = mock(VoidFunction.class);
 
-		maybe.byPresence(consumerMock, functionMock);
+		just(value).byPresence(consumerMock, functionMock);
 
 		verify(consumerMock).consume(value);
 		verifyNoMoreInteractions(consumerMock, functionMock);
@@ -158,6 +150,11 @@ public class MaybeTest {
 	public void byPresenceOnJustWithThrowingIfPresentConsumerPropagatesThrownException() {
 		consumerInvocationOnJustWithThrowingConsumerPropagatesThrownException(
 				(maybe, consumer) -> maybe.byPresence(consumer, mock(VoidFunction.class)));
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void byPresenceOnJustWithNullIfPresentConsumerThrowsNullPointerException() {
+		just(new Object()).byPresence(null, mock(VoidFunction.class));
 	}
 
 	@Test
@@ -183,6 +180,11 @@ public class MaybeTest {
 						Maybe::filter, ToBooleanFunction.class, ToBooleanFunction::apply);
 	}
 
+	@Test(expected = NullPointerException.class)
+	public void filterOnJustWithNullPredicateThrowsNullPointerException() {
+		just(new Object()).filter(null);
+	}
+
 	@Test
 	public void mapToBooleanOnJustInvokesMapFunctionAndReturnsJustBooleanOfFunctionReturnValue() {
 		MaybeTest
@@ -196,6 +198,11 @@ public class MaybeTest {
 		MaybeTest
 				.<ToBooleanFunction<Object, RuntimeException>> functionInvocationOnJustWithThrowingFunctionPropagatesThrownException(
 						Maybe::mapToBoolean, ToBooleanFunction.class, ToBooleanFunction::apply);
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void mapToBooleanOnJustWithNullMapFunctionThrowsNullPointerException() {
+		just(new Object()).mapToBoolean(null);
 	}
 
 	@Test
@@ -248,7 +255,7 @@ public class MaybeTest {
 		MaybeTest
 				.<ToIntFunction<Object, RuntimeException>, Integer, MaybeInt> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
 						Maybe::mapToInt, ToIntFunction.class, ToIntFunction::apply, 42,
-						(value, functionReturnValue) -> MaybeInt.just(functionReturnValue));
+						(value, functionReturnValue) -> MaybeInt.justInt(functionReturnValue));
 	}
 
 	@Test
@@ -350,21 +357,18 @@ public class MaybeTest {
 	@Test
 	public void justContainsAllOfCollectionContainingOnlyOwnValue() {
 		Object value = new Object();
-		Maybe<Object> maybe = just(value);
-
-		List<Object> collection = Arrays.asList(value, value);
-
-		assertTrue(maybe.containsAll(collection));
+		assertTrue(just(value).containsAll(asList(value, value)));
 	}
 
 	@Test
 	public void justDoesNotContainAllOfCollectionContainingOtherValue() {
 		Object value = new Object();
-		Maybe<Object> maybe = just(value);
+		assertFalse(just(value).containsAll(asList(value, new Object())));
+	}
 
-		List<Object> collection = Arrays.asList(value, new Object());
-
-		assertFalse(maybe.containsAll(collection));
+	@Test
+	public void justContainsAllOfNullCollectionThrowsNullPointerException() {
+		just(new Object()).containsAll(null);
 	}
 
 	@Test
@@ -584,39 +588,6 @@ public class MaybeTest {
 	}
 
 	@Test
-	public void ifPresentOnNothingDoesNotInvokeConsumer() {
-		Maybe<Object> maybe = nothing();
-
-		Consumer<Object, RuntimeException> consumerMock = mock(Consumer.class);
-
-		maybe.ifPresent(consumerMock);
-
-		verifyNoMoreInteractions(consumerMock);
-	}
-
-	@Test
-	public void filterOnNothingReturnsNothingAndDoesNotInvokePredicate() {
-		Maybe<Object> maybe = nothing();
-
-		ToBooleanFunction<Object, RuntimeException> predicateMock = mock(ToBooleanFunction.class);
-
-		assertThat(maybe.filter(predicateMock), is(nothing()));
-
-		verifyNoMoreInteractions(predicateMock);
-	}
-
-	@Test
-	public void mapOnNothingReturnsNothingAndDoesNotInvokeMapFunction() {
-		Maybe<Object> maybe = nothing();
-
-		Function<Object, Object, RuntimeException> functionMock = mock(Function.class);
-
-		assertThat(maybe.map(functionMock), is(nothing()));
-
-		verifyNoMoreInteractions(functionMock);
-	}
-
-	@Test
 	public void orElseOnNothingReturnsElse() {
 		Maybe<Object> maybe = nothing();
 
@@ -627,37 +598,206 @@ public class MaybeTest {
 
 	@Test
 	public void orElseGetOnNothingInvokesProviderAndReturnsProvidedValue() {
-		Maybe<Object> maybe = nothing();
-
 		Object value = new Object();
 		Provider<Object, RuntimeException> providerMock = mock(Provider.class);
 		when(providerMock.get()).thenReturn(value);
 
-		assertThat(maybe.orElseGet(providerMock), is(value));
+		assertThat(nothing().orElseGet(providerMock), is(value));
 
 		verify(providerMock).get();
 		verifyNoMoreInteractions(providerMock);
 	}
 
-	public void orElseGetWithThrowingProviderPropagatesThrownExcetpion() {
-		Maybe<Object> maybe = nothing();
-
+	@Test
+	public void orElseGetOnNothingWithThrowingProviderPropagatesThrownExcetpion() {
 		RuntimeException runtimeException = new RuntimeException();
 
 		Provider<Object, RuntimeException> providerMock = mock(Provider.class);
 		when(providerMock.get()).thenThrow(runtimeException);
 
 		try {
-			maybe.orElseGet(providerMock);
+			nothing().orElseGet(providerMock);
 			fail();
 		} catch (RuntimeException e) {
 			assertThat(e, is(sameInstance(runtimeException)));
 		}
 	}
 
+	@Test(expected = NullPointerException.class)
+	public void orElseGetOnNothingWIthNullProviderThrowsNullPointerException() {
+		nothing().orElseGet(null);
+	}
+
+	@Test
+	public void orElseThrowOnNothingThrowsProvidedException() {
+		RuntimeException exception = new RuntimeException();
+
+		Provider<RuntimeException, RuntimeException> providerMock = mock(Provider.class);
+		when(providerMock.get()).thenReturn(exception);
+
+		try {
+			nothing().orElseThrow(providerMock);
+			fail();
+		} catch (RuntimeException e) {
+			assertThat(e, is(sameInstance(exception)));
+		}
+	}
+
+	@Test
+	public void orElseThrowOnNothingWithThrowingProviderPropagatesThrownException() {
+		RuntimeException exception = new RuntimeException();
+
+		Provider<RuntimeException, RuntimeException> providerMock = mock(Provider.class);
+		when(providerMock.get()).thenThrow(exception);
+
+		try {
+			nothing().orElseThrow(providerMock);
+			fail();
+		} catch (RuntimeException e) {
+			assertThat(e, is(sameInstance(exception)));
+		}
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void orElseThrowOnNothingWithNullProviderThrowsNullPointerException() {
+		nothing().orElseThrow(null);
+	}
+
+	@Test
+	public void ifPresentOnNothingDoesNotInvokeConsumer() {
+		Consumer<Object, RuntimeException> consumerMock = mock(Consumer.class);
+
+		nothing().ifPresent(consumerMock);
+
+		verifyNoMoreInteractions(consumerMock);
+	}
+
+	@Test
+	public void ifAbsentOnNothingInvokesFunction() {
+		VoidFunction<RuntimeException> functionMock = mock(VoidFunction.class);
+
+		nothing().ifAbsent(functionMock);
+
+		verify(functionMock).apply();
+		verifyNoMoreInteractions(functionMock);
+	}
+
+	@Test
+	public void ifAbsentOnNothingWithThrowingFunctionPropagatesException() {
+		RuntimeException exception = new RuntimeException();
+
+		VoidFunction<RuntimeException> functionMock = mock(VoidFunction.class);
+		doThrow(exception).when(functionMock).apply();
+
+		try {
+			nothing().ifAbsent(functionMock);
+			fail();
+		} catch (RuntimeException e) {
+			assertThat(e, is(sameInstance(exception)));
+		}
+	}
+
+	@Test
+	public void byPresenceOnNothingInvokesIfAbsentAndDoesNotInvokeIfPresent() {
+		Consumer<Object, RuntimeException> consumerMock = mock(Consumer.class);
+		VoidFunction<RuntimeException> functionMock = mock(VoidFunction.class);
+
+		nothing().byPresence(consumerMock, functionMock);
+
+		verify(functionMock).apply();
+		verifyNoMoreInteractions(consumerMock, functionMock);
+	}
+
+	@Test
+	public void byPresenceOnNothingWithThrowingIfAbsentPropagatesThrownException() {
+		RuntimeException exception = new RuntimeException();
+
+		VoidFunction<RuntimeException> functionMock = mock(VoidFunction.class);
+		doThrow(exception).when(functionMock).apply();
+
+		try {
+			nothing().byPresence(mock(Consumer.class), functionMock);
+			fail();
+		} catch (RuntimeException e) {
+			assertThat(e, is(sameInstance(exception)));
+		}
+	}
+
+	@Test
+	public void filterOnNothingReturnsNothingAndDoesNotInvokePredicate() {
+		ToBooleanFunction<Object, RuntimeException> predicateMock = mock(ToBooleanFunction.class);
+
+		assertThat(nothing().filter(predicateMock), is(nothing()));
+
+		verifyNoMoreInteractions(predicateMock);
+	}
+
+	@Test
+	public void mapToBooleanOnNothingReturnsNothingAndDoesNotInvokeMapFunction() {
+		MaybeTest
+				.<ToBooleanFunction<Object, RuntimeException>, MaybeBoolean> mapOnNothingReturnsNothingAndDoesNotInvokeFunction(
+						Maybe::mapToBoolean, ToBooleanFunction.class, MaybeBoolean.nothing());
+	}
+
+	@Test
+	public void mapToCharOnNothingReturnsNothingAndDoesNotInvokeMapFunction() {
+		MaybeTest
+				.<ToCharFunction<Object, RuntimeException>, MaybeChar> mapOnNothingReturnsNothingAndDoesNotInvokeFunction(
+						Maybe::mapToChar, ToCharFunction.class, MaybeChar.nothing());
+	}
+
+	@Test
+	public void mapToByteOnNothingReturnsNothingAndDoesNotInvokeMapFunction() {
+		MaybeTest
+				.<ToByteFunction<Object, RuntimeException>, MaybeByte> mapOnNothingReturnsNothingAndDoesNotInvokeFunction(
+						Maybe::mapToByte, ToByteFunction.class, MaybeByte.nothing());
+	}
+
+	@Test
+	public void mapToShortOnNothingReturnsNothingAndDoesNotInvokeMapFunction() {
+		MaybeTest
+				.<ToShortFunction<Object, RuntimeException>, MaybeShort> mapOnNothingReturnsNothingAndDoesNotInvokeFunction(
+						Maybe::mapToShort, ToShortFunction.class, MaybeShort.nothing());
+	}
+
+	@Test
+	public void mapToIntOnNothingReturnsNothingAndDoesNotInvokeMapFunction() {
+		MaybeTest
+				.<ToIntFunction<Object, RuntimeException>, MaybeInt> mapOnNothingReturnsNothingAndDoesNotInvokeFunction(
+						Maybe::mapToInt, ToIntFunction.class, MaybeInt.noInt());
+	}
+
+	@Test
+	public void mapToLongOnNothingReturnsNothingAndDoesNotInvokeMapFunction() {
+		MaybeTest
+				.<ToLongFunction<Object, RuntimeException>, MaybeLong> mapOnNothingReturnsNothingAndDoesNotInvokeFunction(
+						Maybe::mapToLong, ToLongFunction.class, MaybeLong.nothing());
+	}
+
+	@Test
+	public void mapToFloatOnNothingReturnsNothingAndDoesNotInvokeMapFunction() {
+		MaybeTest
+				.<ToFloatFunction<Object, RuntimeException>, MaybeFloat> mapOnNothingReturnsNothingAndDoesNotInvokeFunction(
+						Maybe::mapToFloat, ToFloatFunction.class, MaybeFloat.nothing());
+	}
+
+	@Test
+	public void mapToDoubleOnNothingReturnsNothingAndDoesNotInvokeMapFunction() {
+		MaybeTest
+				.<ToDoubleFunction<Object, RuntimeException>, MaybeDouble> mapOnNothingReturnsNothingAndDoesNotInvokeFunction(
+						Maybe::mapToDouble, ToDoubleFunction.class, MaybeDouble.nothing());
+	}
+
+	@Test
+	public void mapOnNothingReturnsNothingAndDoesNotInvokeMapFunction() {
+		MaybeTest
+				.<Function<Object, Object, RuntimeException>, Maybe<Object>> mapOnNothingReturnsNothingAndDoesNotInvokeFunction(
+						Maybe::map, Function.class, nothing());
+	}
+
 	@Test
 	public void nothingIsEmpty() {
-		assertThat(nothing(), empty());
+		assertThat(nothing(), is(empty()));
 	}
 
 	@Test
@@ -666,7 +806,153 @@ public class MaybeTest {
 	}
 
 	@Test
-	public void maybeFromPopualtedOptionalIsJustValue() {
+	public void nothingDoesNotContainValue() {
+		assertFalse(nothing().contains(new Object()));
+	}
+
+	@Test
+	public void nothingContainsAllOfEmptyCollection() {
+		assertTrue(nothing().containsAll(emptySet()));
+	}
+
+	@Test
+	public void nothingDoesNotContainAllOfPopulatedCollection() {
+		assertFalse(nothing().containsAll(singleton(new Object())));
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void nothingContainsAllOfNullCollectionThrowsNullPointerException() {
+		nothing().containsAll(null);
+	}
+
+	@Test
+	public void addOnNothingThrowsUnsupportedOperationExceptionAndDoesNotMutateTarget() {
+		Maybe<Object> maybe = nothing();
+
+		try {
+			maybe.add(new Object());
+			fail();
+		} catch (UnsupportedOperationException e) {
+			assertThat(maybe, is(nothing()));
+		}
+	}
+
+	@Test
+	public void nothingAddAllOfEmptyCollectionDoesNotMutateTarget() {
+		Maybe<Object> maybe = nothing();
+
+		assertFalse(maybe.addAll(emptySet()));
+
+		assertThat(maybe, is(nothing()));
+	}
+
+	@Test
+	public void nothingAddAllOfPopulatedCollectionThrowsUnsupportedOperationExceptionAndDoesNotMutateTarget() {
+		Maybe<Object> maybe = nothing();
+
+		try {
+			maybe.addAll(singleton(new Object()));
+			fail();
+		} catch (UnsupportedOperationException e) {
+			assertThat(maybe, is(nothing()));
+		}
+	}
+
+	@Test
+	public void removeOnNothingDoesNotMutateTarget() {
+		Maybe<Object> maybe = nothing();
+
+		assertFalse(maybe.remove(new Object()));
+
+		assertThat(maybe, is(nothing()));
+	}
+
+	@Test
+	public void removeAllOnNothingDoesNotMutateTarget() {
+		Maybe<Object> maybe = nothing();
+
+		assertFalse(maybe.removeAll(singleton(new Object())));
+
+		assertThat(maybe, is(nothing()));
+	}
+
+	@Test
+	public void retainAllOnNothingDoesNotMutateTarget() {
+		Maybe<Object> maybe = nothing();
+
+		assertFalse(maybe.retainAll(singleton(new Object())));
+
+		assertThat(maybe, is(nothing()));
+	}
+
+	@Test
+	public void clearOnNothingDoesNotMutateTarget() {
+		Maybe<Object> maybe = nothing();
+
+		maybe.clear();
+
+		assertThat(maybe, is(nothing()));
+	}
+
+	@Test
+	public void nothingToArrayReturnsArrayOfLength0() {
+		assertThat(nothing().toArray(), arrayWithSize(0));
+	}
+
+	@Test
+	public void nothingToArrayWithArrayOfLength0ReturnsArrayOfLength0() {
+		assertThat(nothing().toArray(new Object[0]), arrayWithSize(0));
+	}
+
+	@Test
+	public void nothingToArrayWithPopulatedArraySetsFirstIndexToNull() {
+		Object value0 = new Object();
+		Object value1 = new Object();
+		Object[] array = new Object[] { value0, value1 };
+
+		assertThat(nothing().toArray(array), arrayContaining(null, value1));
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void nothingToArrayWithNullArrayThrowsNullPointerException() {
+		nothing().toArray(null);
+	}
+
+	@Test(expected = NoSuchElementException.class)
+	public void nothingIteratorHasNoElements() {
+		Iterator<Object> iterator = nothing().iterator();
+
+		assertFalse(iterator.hasNext());
+		iterator.next();
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void nothingIteratorDoesNotSupportRemove() {
+		nothing().iterator().remove();
+	}
+
+	@Test
+	public void nothingHashCodeIs0() {
+		assertThat(nothing().hashCode(), is(0));
+	}
+
+	@Test
+	public void nothingEqualToNothing() {
+		assertThat(nothing(), is(nothing()));
+	}
+
+	@Test
+	public void nothingNotEqualToJust() {
+		assertThat(nothing(), is(not(just(new Object()))));
+	}
+
+	@Test
+	public void nothingDescribesSelfOnString() {
+		assertThat(nothing().toString(), is("Nothing []"));
+	}
+
+	@Test
+	public void maybeFromPopulatedOptionalIsJustValue() {
 		Object value = new Object();
 		assertThat(fromOptional(Optional.of(value)), is(just(value)));
 	}
@@ -674,6 +960,17 @@ public class MaybeTest {
 	@Test
 	public void maybeFromEmptyOptionalIsNothing() {
 		assertThat(fromOptional(Optional.empty()), is(nothing()));
+	}
+
+	@Test
+	public void reduceUnboxesNestedJust() {
+		Object value = new Object();
+		assertThat(reduce(just(just(value))), is(just(value)));
+	}
+
+	@Test
+	public void reduceUnboxesNestedNothing() {
+		assertThat(reduce(just(nothing())), is(nothing()));
 	}
 
 	@Test
@@ -744,6 +1041,16 @@ public class MaybeTest {
 		} catch (Exception e) {
 			assertThat(e, is(sameInstance(exception)));
 		}
+	}
+
+	private static <F, M> void mapOnNothingReturnsNothingAndDoesNotInvokeFunction(
+			BinaryFunction<? super Maybe<Object>, ? super F, ? extends M, ? extends RuntimeException> mapFunctionApplication,
+			Class<?> functionClass, M nothingValue) {
+		F functionMock = (F) mock(functionClass);
+
+		assertThat(mapFunctionApplication.apply(nothing(), functionMock), is(nothingValue));
+
+		verifyNoMoreInteractions(functionMock);
 	}
 
 }

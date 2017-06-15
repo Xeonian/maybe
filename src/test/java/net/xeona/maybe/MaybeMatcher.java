@@ -1,13 +1,11 @@
 package net.xeona.maybe;
 
 import static java.util.Objects.requireNonNull;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.equalTo;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
-
-import net.xeona.maybe.Maybe;
 
 public class MaybeMatcher<T> extends BaseMatcher<Maybe<T>> {
 
@@ -39,14 +37,14 @@ public class MaybeMatcher<T> extends BaseMatcher<Maybe<T>> {
 	}
 
 	public static <T> MaybeMatcher<T> isJust(T value) {
-		return just(is(value));
+		return isJust(equalTo(value));
 	}
 
-	public static <T> MaybeMatcher<T> just(Matcher<? super T> valueMatcher) {
+	public static <T> MaybeMatcher<T> isJust(Matcher<? super T> valueMatcher) {
 		return new MaybeMatcher<>(Maybe.just(valueMatcher));
 	}
 
-	public static <T> MaybeMatcher<T> nothing() {
+	public static <T> MaybeMatcher<T> isNothing() {
 		return new MaybeMatcher<>(Maybe.nothing());
 	}
 

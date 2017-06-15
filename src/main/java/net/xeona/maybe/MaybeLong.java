@@ -125,7 +125,7 @@ public abstract class MaybeLong {
 
 		@Override
 		public <X extends Throwable> MaybeInt mapToInt(LongToIntFunction<? extends X> function) throws X {
-			return MaybeInt.just(function.apply(value));
+			return MaybeInt.justInt(function.apply(value));
 		}
 
 		@Override
@@ -222,7 +222,7 @@ public abstract class MaybeLong {
 
 		@Override
 		public <X extends Throwable> MaybeInt mapToInt(LongToIntFunction<? extends X> function) throws X {
-			return MaybeInt.nothing();
+			return MaybeInt.noInt();
 		}
 
 		@Override

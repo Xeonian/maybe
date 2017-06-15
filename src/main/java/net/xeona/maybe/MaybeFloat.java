@@ -127,7 +127,7 @@ public abstract class MaybeFloat {
 
 		@Override
 		public <X extends Throwable> MaybeInt mapToInt(FloatToIntFunction<? extends X> function) throws X {
-			return MaybeInt.just(function.apply(value));
+			return MaybeInt.justInt(function.apply(value));
 		}
 
 		@Override
@@ -224,7 +224,7 @@ public abstract class MaybeFloat {
 
 		@Override
 		public <X extends Throwable> MaybeInt mapToInt(FloatToIntFunction<? extends X> function) throws X {
-			return MaybeInt.nothing();
+			return MaybeInt.noInt();
 		}
 
 		@Override

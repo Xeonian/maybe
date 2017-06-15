@@ -1,6 +1,7 @@
 package net.xeona.maybe;
 
 import static java.util.Objects.requireNonNull;
+import static net.xeona.maybe.MaybeInt.justInt;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -41,12 +42,19 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 
 	public abstract E get();
 
+	public abstract E orElse(E other);
+
+	public abstract <X extends Throwable> E orElseGet(Provider<? extends E, ? extends X> provider) throws X;
+
+	public abstract <X extends Throwable, Y extends Throwable> E orElseThrow(
+			Provider<? extends X, ? extends Y> provider) throws X, Y;
+
 	public abstract <X extends Throwable> void ifPresent(Consumer<? super E, ? extends X> consumer) throws X;
 
 	public abstract <X extends Throwable> void ifAbsent(VoidFunction<? extends X> application) throws X;
 
-	public abstract <X extends Throwable> void byPresence(Consumer<? super E, ? extends X> ifPresent,
-			VoidFunction<? extends X> ifAbsent) throws X;
+	public abstract <X extends Throwable, Y extends Throwable> void byPresence(
+			Consumer<? super E, ? extends X> ifPresent, VoidFunction<? extends Y> ifAbsent) throws X, Y;
 
 	public abstract <X extends Throwable> Maybe<E> filter(ToBooleanFunction<? super E, ? extends X> predicate) throws X;
 
@@ -72,13 +80,6 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 
 	public abstract <T, X extends Throwable> Maybe<T> map(Function<? super E, ? extends T, ? extends X> function)
 			throws X;
-
-	public abstract E orElse(E other);
-
-	public abstract <X extends Throwable> E orElseGet(Provider<? extends E, ? extends X> provider) throws X;
-
-	public abstract <X extends Throwable, Y extends Throwable> E orElseThrow(
-			Provider<? extends X, ? extends Y> provider) throws X, Y;
 
 	/**
 	 * @throws UnsupportedOperationException
@@ -143,72 +144,6 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 		}
 
 		@Override
-		public <X extends Throwable> void ifPresent(Consumer<? super E, ? extends X> consumer) throws X {
-			consumer.consume(value);
-		}
-
-		@Override
-		public <X extends Throwable> void ifAbsent(VoidFunction<? extends X> application) {}
-
-		@Override
-		public <X extends Throwable> void byPresence(Consumer<? super E, ? extends X> ifPresent,
-				VoidFunction<? extends X> ifAbsent) throws X {
-			ifPresent(ifPresent);
-		}
-
-		@Override
-		public <X extends Throwable> Maybe<E> filter(ToBooleanFunction<? super E, ? extends X> predicate) throws X {
-			return predicate.apply(value) ? this : nothing();
-		}
-
-		@Override
-		public <X extends Throwable> MaybeBoolean mapToBoolean(ToBooleanFunction<? super E, ? extends X> function)
-				throws X {
-			return MaybeBoolean.just(function.apply(value));
-		}
-
-		@Override
-		public <X extends Throwable> MaybeChar mapToChar(ToCharFunction<? super E, ? extends X> function) throws X {
-			return MaybeChar.just(function.apply(value));
-		}
-
-		@Override
-		public <X extends Throwable> MaybeByte mapToByte(ToByteFunction<? super E, ? extends X> function) throws X {
-			return MaybeByte.just(function.apply(value));
-		}
-
-		@Override
-		public <X extends Throwable> MaybeShort mapToShort(ToShortFunction<? super E, ? extends X> function) throws X {
-			return MaybeShort.just(function.apply(value));
-		}
-
-		@Override
-		public <X extends Throwable> MaybeInt mapToInt(ToIntFunction<? super E, ? extends X> function) throws X {
-			return MaybeInt.just(function.apply(value));
-		}
-
-		@Override
-		public <X extends Throwable> MaybeLong mapToLong(ToLongFunction<? super E, ? extends X> function) throws X {
-			return MaybeLong.just(function.apply(value));
-		}
-
-		@Override
-		public <X extends Throwable> MaybeFloat mapToFloat(ToFloatFunction<? super E, ? extends X> function) throws X {
-			return MaybeFloat.just(function.apply(value));
-		}
-
-		@Override
-		public <X extends Throwable> MaybeDouble mapToDouble(ToDoubleFunction<? super E, ? extends X> function)
-				throws X {
-			return MaybeDouble.just(function.apply(value));
-		}
-
-		@Override
-		public <U, X extends Throwable> Maybe<U> map(Function<? super E, ? extends U, ? extends X> function) throws X {
-			return maybe(function.apply(value));
-		}
-
-		@Override
 		public E orElse(E other) {
 			return value;
 		}
@@ -221,6 +156,72 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 		@Override
 		public <X extends Throwable, Y extends Throwable> E orElseThrow(Provider<? extends X, ? extends Y> provider) {
 			return value;
+		}
+
+		@Override
+		public <X extends Throwable> void ifPresent(Consumer<? super E, ? extends X> consumer) throws X {
+			requireNonNull(consumer, "Consumer must not be null").consume(value);
+		}
+
+		@Override
+		public <X extends Throwable> void ifAbsent(VoidFunction<? extends X> application) {}
+
+		@Override
+		public <X extends Throwable, Y extends Throwable> void byPresence(Consumer<? super E, ? extends X> ifPresent,
+				VoidFunction<? extends Y> ifAbsent) throws X {
+			ifPresent(ifPresent);
+		}
+
+		@Override
+		public <X extends Throwable> Maybe<E> filter(ToBooleanFunction<? super E, ? extends X> predicate) throws X {
+			return requireNonNull(predicate, "Predicate must not be null").apply(value) ? this : nothing();
+		}
+
+		@Override
+		public <X extends Throwable> MaybeBoolean mapToBoolean(ToBooleanFunction<? super E, ? extends X> function)
+				throws X {
+			return MaybeBoolean.just(requireNonNull(function, "Function must not be null").apply(value));
+		}
+
+		@Override
+		public <X extends Throwable> MaybeChar mapToChar(ToCharFunction<? super E, ? extends X> function) throws X {
+			return MaybeChar.just(requireNonNull(function, "Function must not be null").apply(value));
+		}
+
+		@Override
+		public <X extends Throwable> MaybeByte mapToByte(ToByteFunction<? super E, ? extends X> function) throws X {
+			return MaybeByte.just(requireNonNull(function, "Function must not be null").apply(value));
+		}
+
+		@Override
+		public <X extends Throwable> MaybeShort mapToShort(ToShortFunction<? super E, ? extends X> function) throws X {
+			return MaybeShort.just(requireNonNull(function, "Function must not be null").apply(value));
+		}
+
+		@Override
+		public <X extends Throwable> MaybeInt mapToInt(ToIntFunction<? super E, ? extends X> function) throws X {
+			return justInt(requireNonNull(function, "Function must not be null").apply(value));
+		}
+
+		@Override
+		public <X extends Throwable> MaybeLong mapToLong(ToLongFunction<? super E, ? extends X> function) throws X {
+			return MaybeLong.just(requireNonNull(function, "Function must not be null").apply(value));
+		}
+
+		@Override
+		public <X extends Throwable> MaybeFloat mapToFloat(ToFloatFunction<? super E, ? extends X> function) throws X {
+			return MaybeFloat.just(requireNonNull(function, "Function must not be null").apply(value));
+		}
+
+		@Override
+		public <X extends Throwable> MaybeDouble mapToDouble(ToDoubleFunction<? super E, ? extends X> function)
+				throws X {
+			return MaybeDouble.just(requireNonNull(function, "Function must not be null").apply(value));
+		}
+
+		@Override
+		public <U, X extends Throwable> Maybe<U> map(Function<? super E, ? extends U, ? extends X> function) throws X {
+			return maybe(requireNonNull(function, "Function must not be null").apply(value));
 		}
 
 		@Override
@@ -244,8 +245,8 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 		}
 
 		@Override
-		public boolean remove(Object elementsToRemove) {
-			if (value.equals(elementsToRemove)) {
+		public boolean remove(Object elementToRemove) {
+			if (value.equals(elementToRemove)) {
 				throw new UnsupportedOperationException();
 			} else {
 				return false;
@@ -360,11 +361,6 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 
 		};
 
-		@SuppressWarnings("unchecked")
-		private static <T> Nothing<T> instance() {
-			return (Nothing<T>) INSTANCE;
-		}
-
 		private Nothing() {}
 
 		@Override
@@ -378,6 +374,22 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 		}
 
 		@Override
+		public E orElse(E other) {
+			return other;
+		}
+
+		@Override
+		public <X extends Throwable> E orElseGet(Provider<? extends E, ? extends X> provider) throws X {
+			return provider.get();
+		}
+
+		@Override
+		public <X extends Throwable, Y extends Throwable> E orElseThrow(Provider<? extends X, ? extends Y> s)
+				throws X, Y {
+			throw s.get();
+		}
+
+		@Override
 		public <X extends Throwable> void ifPresent(Consumer<? super E, ? extends X> consumer) {}
 
 		@Override
@@ -386,8 +398,8 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 		}
 
 		@Override
-		public <X extends Throwable> void byPresence(Consumer<? super E, ? extends X> ifPresent,
-				VoidFunction<? extends X> ifAbsent) throws X {
+		public <X extends Throwable, Y extends Throwable> void byPresence(Consumer<? super E, ? extends X> ifPresent,
+				VoidFunction<? extends Y> ifAbsent) throws Y {
 			ifAbsent(ifAbsent);
 		}
 
@@ -418,7 +430,7 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 
 		@Override
 		public <X extends Throwable> MaybeInt mapToInt(ToIntFunction<? super E, ? extends X> function) {
-			return MaybeInt.nothing();
+			return MaybeInt.noInt();
 		}
 
 		@Override
@@ -439,22 +451,6 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 		@Override
 		public <U, X extends Throwable> Maybe<U> map(Function<? super E, ? extends U, ? extends X> function) {
 			return nothing();
-		}
-
-		@Override
-		public E orElse(E other) {
-			return other;
-		}
-
-		@Override
-		public <X extends Throwable> E orElseGet(Provider<? extends E, ? extends X> provider) throws X {
-			return provider.get();
-		}
-
-		@Override
-		public <X extends Throwable, Y extends Throwable> E orElseThrow(Provider<? extends X, ? extends Y> s)
-				throws X, Y {
-			throw s.get();
 		}
 
 		@Override
@@ -515,18 +511,23 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 		}
 
 		@Override
-		public String toString() {
-			return "Nothing []";
-		}
-
-		@Override
 		public int hashCode() {
 			return 0;
 		}
 
 		@Override
 		public boolean equals(Object other) {
-			return this == other || other instanceof Nothing;
+			return other instanceof Nothing;
+		}
+
+		@Override
+		public String toString() {
+			return "Nothing []";
+		}
+
+		@SuppressWarnings("unchecked")
+		private static <T> Nothing<T> instance() {
+			return (Nothing<T>) INSTANCE;
 		}
 
 	}
