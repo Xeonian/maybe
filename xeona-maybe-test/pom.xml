@@ -11,8 +11,8 @@
 	<artifactId>xeona-maybe-test</artifactId>
 	<packaging>jar</packaging>
 
-	<name>Xeona Maybe Test</name>
-	<description>Test utilities for use with the Xeona Maybe library</description>
+	<name>Maybe Test Utilities</name>
+	<description>Test utilities for use with the xeona-maybe library</description>
 
 	<build>
 		<plugins>

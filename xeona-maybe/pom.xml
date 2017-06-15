@@ -11,7 +11,7 @@
 	<artifactId>xeona-maybe</artifactId>
 	<packaging>jar</packaging>
 
-	<name>Xeona Maybe</name>
+	<name>Maybe Library</name>
 	<description>Alternative implementation for optional data types</description>
 
 	<build>
