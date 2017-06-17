@@ -5,7 +5,10 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static net.xeona.maybe.MaybeInt.justInt;
 import static net.xeona.maybe.MaybeInt.noInt;
-import static net.xeona.maybe.test.MaybeIntMatcher.isJustInt;
+import static net.xeona.maybe.matcher.MaybeBooleanMatcher.isNoBoolean;
+import static net.xeona.maybe.matcher.MaybeCharMatcher.isNoChar;
+import static net.xeona.maybe.matcher.MaybeIntMatcher.isJustInt;
+import static net.xeona.maybe.matcher.MaybeIntMatcher.isNoInt;
 import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
@@ -27,6 +30,9 @@ import static org.mockito.Mockito.when;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.lang3.SerializationUtils;
+import org.hamcrest.Matcher;
 import org.junit.Test;
 
 import net.xeona.function.BinaryConsumer;
@@ -502,6 +508,10 @@ public class MaybeIntTest {
 		assertTrue(iterator.hasNext());
 		assertThat(iterator.next(), is(value));
 		assertFalse(iterator.hasNext());
+		try {
+			iterator.next();
+			fail();
+		} catch (NoSuchElementException e) {}
 	}
 
 	@Test
@@ -533,6 +543,12 @@ public class MaybeIntTest {
 	}
 
 	@Test
+	public void justIntIsSerializable() {
+		int value = RandomUtils.nextInt();
+		assertThat(SerializationUtils.roundtrip(justInt(value)), isJustInt(value));
+	}
+
+	@Test
 	public void noIntIsNotPresent() {
 		assertFalse(noInt().isPresent());
 	}
@@ -549,7 +565,7 @@ public class MaybeIntTest {
 	}
 
 	@Test
-	public void orElseGetOnNothingInvokesProvider() {
+	public void orElseGetOnNoIntInvokesProvider() {
 		IntProvider<RuntimeException> providerMock = mock(IntProvider.class);
 		noInt().orElseGet(providerMock);
 		verify(providerMock).get();
@@ -557,7 +573,7 @@ public class MaybeIntTest {
 	}
 
 	@Test
-	public void orElseGetOnNothingReturnsProvidedValue() {
+	public void orElseGetOnNoIntReturnsProvidedValue() {
 		IntProvider<RuntimeException> providerMock = mock(IntProvider.class);
 		int providedValue = 42;
 		when(providerMock.get()).thenReturn(providedValue);
@@ -565,7 +581,7 @@ public class MaybeIntTest {
 	}
 
 	@Test
-	public void orElseGetOnNothingWithThrowingProviderPropagatesThrownException() {
+	public void orElseGetOnNoIntWithThrowingProviderPropagatesThrownException() {
 		IntProvider<RuntimeException> providerMock = mock(IntProvider.class);
 		RuntimeException runtimeException = new RuntimeException();
 		when(providerMock.get()).thenThrow(runtimeException);
@@ -578,8 +594,134 @@ public class MaybeIntTest {
 	}
 
 	@Test(expected = NullPointerException.class)
-	public void orElseGetOnNothingWithNullProviderThrowsNullPointerException() {
+	public void orElseGetOnNoIntWithNullProviderThrowsNullPointerException() {
 		noInt().orElseGet(null);
+	}
+
+	@Test
+	public void orElseThrowOnNoIntThrowsProvidedException() {
+		Provider<RuntimeException, RuntimeException> providerMock = mock(Provider.class);
+		RuntimeException exception = new RuntimeException();
+		when(providerMock.get()).thenReturn(exception);
+		try {
+			noInt().orElseThrow(providerMock);
+			fail();
+		} catch (RuntimeException e) {
+			assertThat(e, is(sameInstance(exception)));
+		}
+	}
+
+	@Test
+	public void orElseThrowOnNoIntWithThrowingProviderPropagatesThrownException() {
+		Provider<RuntimeException, RuntimeException> providerMock = mock(Provider.class);
+		RuntimeException exception = new RuntimeException();
+		when(providerMock.get()).thenThrow(exception);
+		try {
+			noInt().orElseThrow(providerMock);
+			fail();
+		} catch (RuntimeException e) {
+			assertThat(e, is(sameInstance(exception)));
+		}
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void orElseThrowOnNoIntWithNullProviderThrowsNullPointerException() {
+		noInt().orElseThrow(null);
+	}
+
+	@Test
+	public void ifPresentOnNoIntDoesNotInvokeConsumer() {
+		IntConsumer<RuntimeException> consumerMock = mock(IntConsumer.class);
+		noInt().ifPresent(consumerMock);
+		verifyNoMoreInteractions(consumerMock);
+	}
+
+	@Test
+	public void ifAbsentOnNoIntInvokesFunction() {
+		VoidFunction<RuntimeException> functionMock = mock(VoidFunction.class);
+		noInt().ifAbsent(functionMock);
+		verify(functionMock).apply();
+		verifyNoMoreInteractions(functionMock);
+	}
+
+	@Test
+	public void ifAbsentOnNoIntWithThrowingFunctionPropagatesThrownException() {
+		VoidFunction<RuntimeException> functionMock = mock(VoidFunction.class);
+		RuntimeException exception = new RuntimeException();
+		doThrow(exception).when(functionMock).apply();
+		try {
+			noInt().ifAbsent(functionMock);
+			fail();
+		} catch (RuntimeException e) {
+			assertThat(e, is(sameInstance(exception)));
+		}
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void ifAbsentOnNoIntWIthNullFunctionThrowsNullPointerException() {
+		noInt().ifAbsent(null);
+	}
+
+	@Test
+	public void byPresenceOnNoIntInvokesIfAbsentAndDoesNotInvokeIfPresent() {
+		IntConsumer<RuntimeException> consumerMock = mock(IntConsumer.class);
+		VoidFunction<RuntimeException> functionMock = mock(VoidFunction.class);
+		noInt().byPresence(consumerMock, functionMock);
+		verify(functionMock).apply();
+		verifyNoMoreInteractions(consumerMock, functionMock);
+	}
+
+	@Test
+	public void byPresenceOnNoIntWithThrowingIfAbsentFunctionPropagatesThrownException() {
+		VoidFunction<RuntimeException> functionMock = mock(VoidFunction.class);
+		RuntimeException exception = new RuntimeException();
+		doThrow(exception).when(functionMock).apply();
+		try {
+			noInt().byPresence(mock(IntConsumer.class), functionMock);
+			fail();
+		} catch (RuntimeException e) {
+			assertThat(e, is(sameInstance(exception)));
+		}
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void byPresenceOnNoIntWithNullIfAbsentFunctionThrowsNullPointerException() {
+		noInt().byPresence(mock(IntConsumer.class), null);
+	}
+
+	@Test
+	public void filterOnNoIntDoesNotInvokePredicate() {
+		functionInvocationOnNoIntDoesNotInvokeDelegateFunction(MaybeInt::filter, IntToBooleanFunction.class);
+	}
+
+	@Test
+	public void filterOnNoIntIsNoInt() {
+		functionInvocationOnNoIntReturnsValue(MaybeInt::filter, IntToBooleanFunction.class, isNoInt());
+	}
+
+	@Test
+	public void mapToBooleanOnNoIntDoesNotInvokeMapFunction() {
+		functionInvocationOnNoIntDoesNotInvokeDelegateFunction(MaybeInt::mapToBoolean, IntToBooleanFunction.class);
+	}
+
+	@Test
+	public void mapToBooleanOnNoIntIsNoBoolean() {
+		functionInvocationOnNoIntReturnsValue(MaybeInt::mapToBoolean, IntToBooleanFunction.class, isNoBoolean());
+	}
+
+	@Test
+	public void mapToCharOnNoIntDoesNotInvokeMapFunction() {
+		functionInvocationOnNoIntDoesNotInvokeDelegateFunction(MaybeInt::mapToChar, IntToCharFunction.class);
+	}
+
+	@Test
+	public void mapToCharOnNoIntIsNoChar() {
+		functionInvocationOnNoIntReturnsValue(MaybeInt::mapToChar, IntToCharFunction.class, isNoChar());
+	}
+
+	@Test
+	public void mapToShortOnNoIntDoesNotInvokeMapFunction() {
+		functionInvocationOnNoIntDoesNotInvokeDelegateFunction(MaybeInt::mapToShort, IntToShortFunction.class);
 	}
 
 	private static void consumerInvocationOnJustIntWithThrowingConsumerPropagatesThrownException(
@@ -632,6 +774,20 @@ public class MaybeIntTest {
 		} catch (RuntimeException e) {
 			assertThat(e, is(sameInstance(exception)));
 		}
+	}
+
+	private static <F> void functionInvocationOnNoIntDoesNotInvokeDelegateFunction(
+			BinaryFunction<? super MaybeInt, ? super F, ?, ? extends RuntimeException> maybeFunctionApplication,
+			Class<? super F> delegateFunctionClass) {
+		F functionMock = (F) mock(delegateFunctionClass);
+		maybeFunctionApplication.apply(noInt(), functionMock);
+		verifyNoMoreInteractions(functionMock);
+	}
+
+	public static <F, M> void functionInvocationOnNoIntReturnsValue(
+			BinaryFunction<? super MaybeInt, ? super F, ? extends M, ? extends RuntimeException> maybeFunctionApplication,
+			Class<? super F> delegateFunctionClass, Matcher<? super M> valueMatcher) {
+		assertThat(maybeFunctionApplication.apply(noInt(), (F) mock(delegateFunctionClass)), valueMatcher);
 	}
 
 }

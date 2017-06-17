@@ -9,12 +9,14 @@ import static net.xeona.maybe.Maybe.maybe;
 import static net.xeona.maybe.Maybe.nothing;
 import static net.xeona.maybe.Maybe.reduce;
 import static net.xeona.maybe.Maybe.toOptional;
-import static net.xeona.maybe.test.MaybeMatcher.isJust;
-import static net.xeona.maybe.test.MaybeMatcher.isNothing;
+import static net.xeona.maybe.matcher.MaybeMatcher.isJust;
+import static net.xeona.maybe.matcher.MaybeMatcher.isNothing;
+import static org.apache.commons.lang3.SerializationUtils.roundtrip;
 import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.Matchers.arrayWithSize;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.sameInstance;
@@ -28,10 +30,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.lang3.SerializationException;
+import org.apache.commons.text.RandomStringGenerator;
 import org.junit.Test;
 
 import net.xeona.function.BinaryConsumer;
@@ -578,6 +584,21 @@ public class MaybeTest {
 	}
 
 	@Test
+	public void justOfSerializableValueIsSerializable() {
+		Object value = new RandomStringGenerator.Builder().withinRange('a', 'z').build()
+				.generate(RandomUtils.nextInt(5, 20));
+		assertThat(value, is(instanceOf(Serializable.class)));
+		assertThat(roundtrip(just(value)), isJust(value));
+	}
+
+	@Test(expected = SerializationException.class)
+	public void serializeJustOfNonSerializableValueThrowsSerializationException() {
+		Object value = new Object();
+		assertThat(value, is(not(instanceOf(Serializable.class))));
+		roundtrip(just(value));
+	}
+
+	@Test
 	public void nothingIsNotPresent() {
 		assertFalse(nothing().isPresent());
 	}
@@ -697,6 +718,11 @@ public class MaybeTest {
 		}
 	}
 
+	@Test(expected = NullPointerException.class)
+	public void ifAbsentOnNothingWithNullFunctionThrowsNullPointerException() {
+		nothing().ifAbsent(null);
+	}
+
 	@Test
 	public void byPresenceOnNothingInvokesIfAbsentAndDoesNotInvokeIfPresent() {
 		Consumer<Object, RuntimeException> consumerMock = mock(Consumer.class);
@@ -721,6 +747,11 @@ public class MaybeTest {
 		} catch (RuntimeException e) {
 			assertThat(e, is(sameInstance(exception)));
 		}
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void byPresenceOnNothingWithNullIfAbsentFunctionThrowsNullPointerException() {
+		nothing().byPresence(mock(Consumer.class), null);
 	}
 
 	@Test
@@ -949,6 +980,11 @@ public class MaybeTest {
 	@Test
 	public void nothingDescribesSelfOnString() {
 		assertThat(nothing().toString(), is("Nothing []"));
+	}
+
+	@Test
+	public void nothingIsSerializable() {
+		assertThat(roundtrip(nothing()), isNothing());
 	}
 
 	@Test

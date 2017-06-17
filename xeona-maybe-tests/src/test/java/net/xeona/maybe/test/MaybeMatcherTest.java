@@ -2,8 +2,8 @@ package net.xeona.maybe.test;
 
 import static net.xeona.maybe.Maybe.just;
 import static net.xeona.maybe.Maybe.nothing;
-import static net.xeona.maybe.test.MaybeMatcher.isJust;
-import static net.xeona.maybe.test.MaybeMatcher.isNothing;
+import static net.xeona.maybe.matcher.MaybeMatcher.isJust;
+import static net.xeona.maybe.matcher.MaybeMatcher.isNothing;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertFalse;
