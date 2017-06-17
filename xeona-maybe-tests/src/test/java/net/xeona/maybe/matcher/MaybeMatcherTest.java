@@ -1,4 +1,4 @@
-package net.xeona.maybe.test;
+package net.xeona.maybe.matcher;
 
 import static net.xeona.maybe.Maybe.just;
 import static net.xeona.maybe.Maybe.nothing;

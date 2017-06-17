@@ -1,59 +1,109 @@
 package net.xeona.maybe.matcher;
 
 import static java.util.Objects.requireNonNull;
-import static net.xeona.maybe.Maybe.just;
-import static net.xeona.maybe.Maybe.nothing;
+import static org.hamcrest.Matchers.anything;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 
-import net.xeona.maybe.Maybe;
 import net.xeona.maybe.MaybeInt;
 
-public class MaybeIntMatcher extends BaseMatcher<MaybeInt> {
+public abstract class MaybeIntMatcher extends BaseMatcher<MaybeInt> {
 
-	private final Maybe<? extends Matcher<? super Integer>> maybeValueMatcher;
-
-	private MaybeIntMatcher(Maybe<? extends Matcher<? super Integer>> maybeValueMatcher) {
-		this.maybeValueMatcher = requireNonNull(maybeValueMatcher, "Maybe value matcher must not be null");
-	}
+	private MaybeIntMatcher() {}
 
 	@Override
 	public boolean matches(Object item) {
 		boolean matches;
 		if (item instanceof MaybeInt) {
 			MaybeInt maybeInt = (MaybeInt) item;
-			matches = maybeValueMatcher
-					.mapToBoolean(
-							valueMatcher -> maybeInt.mapToBoolean(value -> valueMatcher.matches(value)).orElse(false))
-					.orElseGet(() -> !maybeInt.isPresent());
+			matches = maybeIntMatches(maybeInt);
 		} else {
 			matches = false;
 		}
 		return matches;
 	}
 
-	@Override
-	public void describeTo(Description description) {
-		maybeValueMatcher.byPresence(valueMatcher -> {
+	protected abstract boolean maybeIntMatches(MaybeInt maybeInt);
+
+	public static Matcher<MaybeInt> justInt() {
+		return justInt(anything());
+	}
+
+	public static Matcher<MaybeInt> justInt(int value) {
+		return justInt(equalTo(value));
+	}
+
+	public static Matcher<MaybeInt> justInt(Matcher<? super Integer> valueMatcher) {
+		return new JustIntMatcher(valueMatcher);
+	}
+
+	public static Matcher<MaybeInt> isJustInt() {
+		return is(justInt());
+	}
+
+	public static Matcher<MaybeInt> isJustInt(int value) {
+		return is(justInt(value));
+	}
+
+	public static Matcher<MaybeInt> isJustInt(Matcher<? super Integer> valueMatcher) {
+		return is(justInt(valueMatcher));
+	}
+
+	public static Matcher<MaybeInt> noInt() {
+		return NoIntMatcher.instance();
+	}
+
+	public static Matcher<MaybeInt> isNoInt() {
+		return is(noInt());
+	}
+
+	private static class JustIntMatcher extends MaybeIntMatcher {
+
+		private final Matcher<? super Integer> valueMatcher;
+
+		private JustIntMatcher(Matcher<? super Integer> valueMatcher) {
+			this.valueMatcher = requireNonNull(valueMatcher, "Value matcher must not be null");
+		}
+
+		@Override
+		public void describeTo(Description description) {
 			description.appendText("JustInt [");
 			valueMatcher.describeTo(description);
 			description.appendText("]");
-		}, () -> description.appendText("NoInt []"));
+
+		}
+
+		@Override
+		protected boolean maybeIntMatches(MaybeInt maybeInt) {
+			return maybeInt.mapToBoolean(value -> valueMatcher.matches(value)).orElse(false);
+		}
+
 	}
 
-	public static MaybeIntMatcher isJustInt(int value) {
-		return isJustInt(equalTo(value));
-	}
+	private static class NoIntMatcher extends MaybeIntMatcher {
 
-	public static MaybeIntMatcher isJustInt(Matcher<? super Integer> valueMatcher) {
-		return new MaybeIntMatcher(just(requireNonNull(valueMatcher, "Value matcher must not be null")));
-	}
+		private static final NoIntMatcher INSTANCE = new NoIntMatcher();
 
-	public static MaybeIntMatcher isNoInt() {
-		return new MaybeIntMatcher(nothing());
+		private NoIntMatcher() {}
+
+		@Override
+		public void describeTo(Description description) {
+			description.appendText("NoInt []");
+		}
+
+		@Override
+		protected boolean maybeIntMatches(MaybeInt maybeInt) {
+			return maybeInt.isEmpty();
+		}
+
+		public static NoIntMatcher instance() {
+			return INSTANCE;
+		}
+
 	}
 
 }

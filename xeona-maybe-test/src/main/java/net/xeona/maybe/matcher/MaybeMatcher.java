@@ -1,8 +1,6 @@
 package net.xeona.maybe.matcher;
 
 import static java.util.Objects.requireNonNull;
-import static net.xeona.maybe.Maybe.just;
-import static net.xeona.maybe.Maybe.nothing;
 import static org.hamcrest.Matchers.equalTo;
 
 import org.hamcrest.BaseMatcher;
@@ -19,38 +17,23 @@ import net.xeona.maybe.Maybe;
  * @param <T>
  *            The type of value contained by <code>Just</code> instances to match against
  */
-public class MaybeMatcher<T> extends BaseMatcher<Maybe<T>> {
+public abstract class MaybeMatcher<T> extends BaseMatcher<Maybe<T>> {
 
-	private final Maybe<? extends Matcher<? super T>> maybeValueMatcher;
-
-	private MaybeMatcher(Maybe<? extends Matcher<? super T>> maybeValueMatcher) {
-		this.maybeValueMatcher = requireNonNull(maybeValueMatcher, "Maybe value matcher must not be null");
-	}
+	private MaybeMatcher() {}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public boolean matches(Object item) {
 		boolean matches;
 		if (item instanceof Maybe) {
-			Maybe<T> maybe = (Maybe<T>) item;
-			matches = maybeValueMatcher
-					.mapToBoolean(
-							valueMatcher -> maybe.mapToBoolean(value -> valueMatcher.matches(value)).orElse(false))
-					.orElseGet(() -> !maybe.isPresent());
+			Maybe<?> maybe = (Maybe<?>) item;
+			matches = maybeMatches(maybe);
 		} else {
 			matches = false;
 		}
 		return matches;
 	}
 
-	@Override
-	public void describeTo(Description description) {
-		maybeValueMatcher.byPresence(valueMatcher -> {
-			description.appendText("Just [");
-			valueMatcher.describeTo(description);
-			description.appendText("]");
-		}, () -> description.appendText("Nothing []"));
-	}
+	protected abstract boolean maybeMatches(Maybe<?> maybe);
 
 	/**
 	 * Construct a matcher that will match instances of {@link Maybe} with a present value equal to <code>value</code>.
@@ -82,7 +65,7 @@ public class MaybeMatcher<T> extends BaseMatcher<Maybe<T>> {
 	 *             If <code>valueMatcher</code> is <code>null</code>
 	 */
 	public static <T> MaybeMatcher<T> isJust(Matcher<? super T> valueMatcher) {
-		return new MaybeMatcher<>(just(requireNonNull(valueMatcher, "Value matcher must not be null")));
+		return new JustMatcher<>(valueMatcher);
 	}
 
 	/**
@@ -93,7 +76,52 @@ public class MaybeMatcher<T> extends BaseMatcher<Maybe<T>> {
 	 * @return A <code>MaybeMatcher</code> which accepts instances of <code>Maybe</code> containing no value
 	 */
 	public static <T> MaybeMatcher<T> isNothing() {
-		return new MaybeMatcher<>(nothing());
+		return NothingMatcher.instance();
+	}
+
+	private static class JustMatcher<T> extends MaybeMatcher<T> {
+
+		private final Matcher<? super T> valueMatcher;
+
+		private JustMatcher(Matcher<? super T> valueMatcher) {
+			this.valueMatcher = requireNonNull(valueMatcher, "Value matcher must not be null");
+		}
+
+		@Override
+		public void describeTo(Description description) {
+			description.appendText("Just [");
+			valueMatcher.describeTo(description);
+			description.appendText("]");
+		}
+
+		@Override
+		protected boolean maybeMatches(Maybe<?> maybe) {
+			return maybe.mapToBoolean(valueMatcher::matches).orElse(false);
+		}
+
+	}
+
+	private static class NothingMatcher extends MaybeMatcher<Object> {
+
+		private static final NothingMatcher INSTANCE = new NothingMatcher();
+
+		private NothingMatcher() {}
+
+		@Override
+		public void describeTo(Description description) {
+			description.appendText("Nothing []");
+		}
+
+		@Override
+		protected boolean maybeMatches(Maybe<?> maybe) {
+			return maybe.isEmpty();
+		}
+
+		@SuppressWarnings("unchecked")
+		public static <T> MaybeMatcher<T> instance() {
+			return (MaybeMatcher<T>) INSTANCE;
+		}
+
 	}
 
 }
