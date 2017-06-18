@@ -180,22 +180,22 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 		@Override
 		public <X extends Throwable> MaybeBoolean mapToBoolean(ToBooleanFunction<? super E, ? extends X> function)
 				throws X {
-			return MaybeBoolean.just(requireNonNull(function, "Function must not be null").apply(value));
+			return MaybeBoolean.justBoolean(requireNonNull(function, "Function must not be null").apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeChar mapToChar(ToCharFunction<? super E, ? extends X> function) throws X {
-			return MaybeChar.just(requireNonNull(function, "Function must not be null").apply(value));
+			return MaybeChar.justChar(requireNonNull(function, "Function must not be null").apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeByte mapToByte(ToByteFunction<? super E, ? extends X> function) throws X {
-			return MaybeByte.just(requireNonNull(function, "Function must not be null").apply(value));
+			return MaybeByte.justByte(requireNonNull(function, "Function must not be null").apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeShort mapToShort(ToShortFunction<? super E, ? extends X> function) throws X {
-			return MaybeShort.just(requireNonNull(function, "Function must not be null").apply(value));
+			return MaybeShort.justShort(requireNonNull(function, "Function must not be null").apply(value));
 		}
 
 		@Override
@@ -205,18 +205,18 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 
 		@Override
 		public <X extends Throwable> MaybeLong mapToLong(ToLongFunction<? super E, ? extends X> function) throws X {
-			return MaybeLong.just(requireNonNull(function, "Function must not be null").apply(value));
+			return MaybeLong.justLong(requireNonNull(function, "Function must not be null").apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeFloat mapToFloat(ToFloatFunction<? super E, ? extends X> function) throws X {
-			return MaybeFloat.just(requireNonNull(function, "Function must not be null").apply(value));
+			return MaybeFloat.justFloat(requireNonNull(function, "Function must not be null").apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeDouble mapToDouble(ToDoubleFunction<? super E, ? extends X> function)
 				throws X {
-			return MaybeDouble.just(requireNonNull(function, "Function must not be null").apply(value));
+			return MaybeDouble.justDouble(requireNonNull(function, "Function must not be null").apply(value));
 		}
 
 		@Override
@@ -420,12 +420,12 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 
 		@Override
 		public <X extends Throwable> MaybeByte mapToByte(ToByteFunction<? super E, ? extends X> function) {
-			return MaybeByte.nothing();
+			return MaybeByte.noByte();
 		}
 
 		@Override
 		public <X extends Throwable> MaybeShort mapToShort(ToShortFunction<? super E, ? extends X> function) {
-			return MaybeShort.nothing();
+			return MaybeShort.noShort();
 		}
 
 		@Override

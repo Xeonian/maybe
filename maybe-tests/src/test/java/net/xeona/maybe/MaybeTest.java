@@ -196,7 +196,7 @@ public class MaybeTest {
 		MaybeTest
 				.<ToBooleanFunction<Object, RuntimeException>, Boolean, MaybeBoolean> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
 						Maybe::mapToBoolean, ToBooleanFunction.class, ToBooleanFunction::apply, true,
-						(value, functionReturnValue) -> MaybeBoolean.just(functionReturnValue));
+						(value, functionReturnValue) -> MaybeBoolean.justBoolean(functionReturnValue));
 	}
 
 	@Test
@@ -216,7 +216,7 @@ public class MaybeTest {
 		MaybeTest
 				.<ToCharFunction<Object, RuntimeException>, Character, MaybeChar> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
 						Maybe::mapToChar, ToCharFunction.class, ToCharFunction::apply, 'a',
-						(value, functionReturnValue) -> MaybeChar.just(functionReturnValue));
+						(value, functionReturnValue) -> MaybeChar.justChar(functionReturnValue));
 	}
 
 	@Test
@@ -231,7 +231,7 @@ public class MaybeTest {
 		MaybeTest
 				.<ToByteFunction<Object, RuntimeException>, Byte, MaybeByte> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
 						Maybe::mapToByte, ToByteFunction.class, ToByteFunction::apply, (byte) 42,
-						(value, functionReturnValue) -> MaybeByte.just(functionReturnValue));
+						(value, functionReturnValue) -> MaybeByte.justByte(functionReturnValue));
 	}
 
 	@Test
@@ -246,7 +246,7 @@ public class MaybeTest {
 		MaybeTest
 				.<ToShortFunction<Object, RuntimeException>, Short, MaybeShort> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
 						Maybe::mapToShort, ToShortFunction.class, ToShortFunction::apply, (short) 42,
-						(value, functionReturnValue) -> MaybeShort.just(functionReturnValue));
+						(value, functionReturnValue) -> MaybeShort.justShort(functionReturnValue));
 	}
 
 	@Test
@@ -276,7 +276,7 @@ public class MaybeTest {
 		MaybeTest
 				.<ToLongFunction<Object, RuntimeException>, Long, MaybeLong> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
 						Maybe::mapToLong, ToLongFunction.class, ToLongFunction::apply, 42L,
-						(value, functionReturnValue) -> MaybeLong.just(functionReturnValue));
+						(value, functionReturnValue) -> MaybeLong.justLong(functionReturnValue));
 	}
 
 	@Test
@@ -291,7 +291,7 @@ public class MaybeTest {
 		MaybeTest
 				.<ToFloatFunction<Object, RuntimeException>, Float, MaybeFloat> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
 						Maybe::mapToFloat, ToFloatFunction.class, ToFloatFunction::apply, 42F,
-						(value, functionReturnValue) -> MaybeFloat.just(functionReturnValue));
+						(value, functionReturnValue) -> MaybeFloat.justFloat(functionReturnValue));
 	}
 
 	@Test
@@ -306,7 +306,7 @@ public class MaybeTest {
 		MaybeTest
 				.<ToDoubleFunction<Object, RuntimeException>, Double, MaybeDouble> functionInvocationOnJustInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
 						Maybe::mapToDouble, ToDoubleFunction.class, ToDoubleFunction::apply, 42.0,
-						(value, functionReturnValue) -> MaybeDouble.just(functionReturnValue));
+						(value, functionReturnValue) -> MaybeDouble.justDouble(functionReturnValue));
 	}
 
 	@Test
@@ -781,14 +781,14 @@ public class MaybeTest {
 	public void mapToByteOnNothingReturnsNothingAndDoesNotInvokeMapFunction() {
 		MaybeTest
 				.<ToByteFunction<Object, RuntimeException>, MaybeByte> mapOnNothingReturnsNothingAndDoesNotInvokeFunction(
-						Maybe::mapToByte, ToByteFunction.class, MaybeByte.nothing());
+						Maybe::mapToByte, ToByteFunction.class, MaybeByte.noByte());
 	}
 
 	@Test
 	public void mapToShortOnNothingReturnsNothingAndDoesNotInvokeMapFunction() {
 		MaybeTest
 				.<ToShortFunction<Object, RuntimeException>, MaybeShort> mapOnNothingReturnsNothingAndDoesNotInvokeFunction(
-						Maybe::mapToShort, ToShortFunction.class, MaybeShort.nothing());
+						Maybe::mapToShort, ToShortFunction.class, MaybeShort.noShort());
 	}
 
 	@Test

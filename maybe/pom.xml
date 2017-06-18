@@ -4,11 +4,11 @@
 
 	<parent>
 		<groupId>net.xeona</groupId>
-		<artifactId>xeona-maybe-parent</artifactId>
+		<artifactId>maybe-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>xeona-maybe</artifactId>
+	<artifactId>maybe</artifactId>
 	<packaging>jar</packaging>
 
 	<name>Maybe Library</name>

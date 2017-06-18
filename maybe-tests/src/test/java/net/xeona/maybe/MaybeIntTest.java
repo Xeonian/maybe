@@ -4,12 +4,22 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static net.xeona.maybe.MaybeInt.justInt;
+import static net.xeona.maybe.MaybeInt.maybeInt;
 import static net.xeona.maybe.MaybeInt.noInt;
 import static net.xeona.maybe.matcher.MaybeBooleanMatcher.isNoBoolean;
+import static net.xeona.maybe.matcher.MaybeByteMatcher.isNoByte;
 import static net.xeona.maybe.matcher.MaybeCharMatcher.isNoChar;
+import static net.xeona.maybe.matcher.MaybeDoubleMatcher.isNoDouble;
+import static net.xeona.maybe.matcher.MaybeFloatMatcher.isNoFloat;
 import static net.xeona.maybe.matcher.MaybeIntMatcher.isJustInt;
 import static net.xeona.maybe.matcher.MaybeIntMatcher.isNoInt;
+import static net.xeona.maybe.matcher.MaybeLongMatcher.isNoLong;
+import static net.xeona.maybe.matcher.MaybeMatcher.isNothing;
+import static net.xeona.maybe.matcher.MaybeShortMatcher.isNoShort;
+import static org.apache.commons.lang3.RandomUtils.nextInt;
+import static org.apache.commons.lang3.SerializationUtils.roundtrip;
 import static org.hamcrest.Matchers.arrayContaining;
+import static org.hamcrest.Matchers.arrayWithSize;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
@@ -66,13 +76,13 @@ public class MaybeIntTest {
 	}
 
 	@Test
-	public void orElseOnJustReturnsValue() {
+	public void orElseOnJustIntReturnsValue() {
 		int value = 0;
 		assertEquals(justInt(value).orElse(1), value);
 	}
 
 	@Test
-	public void orElseGetOnJustReturnsValueAndDoesNotInvokeProvider() {
+	public void orElseGetOnJustIntReturnsValueAndDoesNotInvokeProvider() {
 		int value = 0;
 		IntProvider<RuntimeException> providerMock = mock(IntProvider.class);
 
@@ -81,7 +91,7 @@ public class MaybeIntTest {
 	}
 
 	@Test
-	public void orElseThrowOnJustReturnsValueAndDoesNotInvokeProvider() {
+	public void orElseThrowOnJustIntReturnsValueAndDoesNotInvokeProvider() {
 		int value = 0;
 		Provider<RuntimeException, RuntimeException> providerMock = mock(Provider.class);
 
@@ -90,7 +100,7 @@ public class MaybeIntTest {
 	}
 
 	@Test
-	public void ifPresentOnJustInvokesConumserWithValue() {
+	public void ifPresentOnJustIntInvokesConsumerWithValue() {
 		int value = 0;
 		IntConsumer<RuntimeException> consumerMock = mock(IntConsumer.class);
 
@@ -173,7 +183,7 @@ public class MaybeIntTest {
 		MaybeIntTest
 				.<IntToBooleanFunction<RuntimeException>, Boolean, MaybeBoolean> functionInvocationOnJustIntInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
 						MaybeInt::mapToBoolean, IntToBooleanFunction.class, IntToBooleanFunction::apply, true,
-						(value, functionReturnValue) -> MaybeBoolean.just(functionReturnValue));
+						(value, functionReturnValue) -> MaybeBoolean.justBoolean(functionReturnValue));
 	}
 
 	@Test
@@ -193,7 +203,7 @@ public class MaybeIntTest {
 		MaybeIntTest
 				.<IntToCharFunction<RuntimeException>, Character, MaybeChar> functionInvocationOnJustIntInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
 						MaybeInt::mapToChar, IntToCharFunction.class, IntToCharFunction::apply, 'a',
-						(value, functionReturnValue) -> MaybeChar.just(functionReturnValue));
+						(value, functionReturnValue) -> MaybeChar.justChar(functionReturnValue));
 	}
 
 	@Test
@@ -213,7 +223,7 @@ public class MaybeIntTest {
 		MaybeIntTest
 				.<IntToByteFunction<RuntimeException>, Byte, MaybeByte> functionInvocationOnJustIntInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
 						MaybeInt::mapToByte, IntToByteFunction.class, IntToByteFunction::apply, (byte) 42,
-						(value, functionReturnValue) -> MaybeByte.just(functionReturnValue));
+						(value, functionReturnValue) -> MaybeByte.justByte(functionReturnValue));
 	}
 
 	@Test
@@ -233,7 +243,7 @@ public class MaybeIntTest {
 		MaybeIntTest
 				.<IntToShortFunction<RuntimeException>, Short, MaybeShort> functionInvocationOnJustIntInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
 						MaybeInt::mapToShort, IntToShortFunction.class, IntToShortFunction::apply, (short) 42,
-						(value, functionReturnValue) -> MaybeShort.just(functionReturnValue));
+						(value, functionReturnValue) -> MaybeShort.justShort(functionReturnValue));
 	}
 
 	@Test
@@ -273,7 +283,7 @@ public class MaybeIntTest {
 		MaybeIntTest
 				.<IntToLongFunction<RuntimeException>, Long, MaybeLong> functionInvocationOnJustIntInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
 						MaybeInt::mapToLong, IntToLongFunction.class, IntToLongFunction::apply, 42L,
-						(value, functionReturnValue) -> MaybeLong.just(functionReturnValue));
+						(value, functionReturnValue) -> MaybeLong.justLong(functionReturnValue));
 	}
 
 	@Test
@@ -293,7 +303,7 @@ public class MaybeIntTest {
 		MaybeIntTest
 				.<IntToFloatFunction<RuntimeException>, Float, MaybeFloat> functionInvocationOnJustIntInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
 						MaybeInt::mapToFloat, IntToFloatFunction.class, IntToFloatFunction::apply, 42.0F,
-						(value, functionReturnValue) -> MaybeFloat.just(functionReturnValue));
+						(value, functionReturnValue) -> MaybeFloat.justFloat(functionReturnValue));
 	}
 
 	@Test
@@ -313,7 +323,7 @@ public class MaybeIntTest {
 		MaybeIntTest
 				.<IntToDoubleFunction<RuntimeException>, Double, MaybeDouble> functionInvocationOnJustIntInvokesFunctionAndReturnsMaybeOfFunctionReturnValue(
 						MaybeInt::mapToDouble, IntToDoubleFunction.class, IntToDoubleFunction::apply, 42.0,
-						(value, functionReturnValue) -> MaybeDouble.just(functionReturnValue));
+						(value, functionReturnValue) -> MaybeDouble.justDouble(functionReturnValue));
 	}
 
 	@Test
@@ -720,8 +730,270 @@ public class MaybeIntTest {
 	}
 
 	@Test
+	public void mapToByteOnNoIntDoesNotInvokeMapFunction() {
+		functionInvocationOnNoIntDoesNotInvokeDelegateFunction(MaybeInt::mapToByte, IntToByteFunction.class);
+	}
+
+	@Test
+	public void mapToByteOnNoIntIsNoByte() {
+		functionInvocationOnNoIntReturnsValue(MaybeInt::mapToByte, IntToByteFunction.class, isNoByte());
+	}
+
+	@Test
 	public void mapToShortOnNoIntDoesNotInvokeMapFunction() {
 		functionInvocationOnNoIntDoesNotInvokeDelegateFunction(MaybeInt::mapToShort, IntToShortFunction.class);
+	}
+
+	@Test
+	public void mapToShortOnNoIntIsNoShort() {
+		functionInvocationOnNoIntReturnsValue(MaybeInt::mapToShort, IntToShortFunction.class, isNoShort());
+	}
+
+	@Test
+	public void mapToIntOnNoIntDoesNotInvokeMapFunction() {
+		functionInvocationOnNoIntDoesNotInvokeDelegateFunction(MaybeInt::mapToInt, IntUnaryOperator.class);
+	}
+
+	@Test
+	public void mapToIntOnNoIntReturnsNoInt() {
+		functionInvocationOnNoIntReturnsValue(MaybeInt::mapToInt, IntUnaryOperator.class, isNoInt());
+	}
+
+	@Test
+	public void mapToLongOnNoIntDoesNotInvokeMapFunction() {
+		functionInvocationOnNoIntDoesNotInvokeDelegateFunction(MaybeInt::mapToLong, IntToLongFunction.class);
+	}
+
+	@Test
+	public void mapToLongOnNoIntReturnsNoLong() {
+		functionInvocationOnNoIntReturnsValue(MaybeInt::mapToLong, IntToLongFunction.class, isNoLong());
+	}
+
+	@Test
+	public void mapToFloatOnNoIntDoesNotInvokeMappingFunction() {
+		functionInvocationOnNoIntDoesNotInvokeDelegateFunction(MaybeInt::mapToFloat, IntToFloatFunction.class);
+	}
+
+	@Test
+	public void mapToFloatOnNoIntReturnsNoFloat() {
+		functionInvocationOnNoIntReturnsValue(MaybeInt::mapToFloat, IntToFloatFunction.class, isNoFloat());
+	}
+
+	@Test
+	public void mapToDoubleOnNoIntDoesNotInvokeMappingFunction() {
+		functionInvocationOnNoIntDoesNotInvokeDelegateFunction(MaybeInt::mapToDouble, IntToDoubleFunction.class);
+	}
+
+	@Test
+	public void mapToDoubleOnNoIntReturnsNoDouble() {
+		functionInvocationOnNoIntReturnsValue(MaybeInt::mapToDouble, IntToDoubleFunction.class, isNoDouble());
+	}
+
+	@Test
+	public void mapOnNoIntDoesNotInvokeMappingFunction() {
+		functionInvocationOnNoIntDoesNotInvokeDelegateFunction(MaybeInt::map, IntFunction.class);
+	}
+
+	@Test
+	public void mapOnNoIntReturnsNothing() {
+		MaybeIntTest.<IntFunction<Object, RuntimeException>, Maybe<Object>> functionInvocationOnNoIntReturnsValue(
+				MaybeInt::map, IntFunction.class, isNothing());
+	}
+
+	@Test
+	public void noIntIsEmpty() {
+		assertThat(noInt(), is(empty()));
+	}
+
+	@Test
+	public void noIntHasSize0() {
+		assertThat(noInt(), hasSize(0));
+	}
+
+	@Test
+	public void noIntDoesNotContainValue() {
+		assertFalse(noInt().contains(new Object()));
+	}
+
+	@Test
+	public void noIntContainsAllOfEmptyCollection() {
+		assertTrue(noInt().containsAll(emptySet()));
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void noIntContainsAllOfNullCollectionThrowsNullPointerException() {
+		noInt().containsAll(null);
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void addOnNoIntThrowsUnsupportedOperationException() {
+		noInt().add(nextInt());
+	}
+
+	@Test
+	public void addOnNoIntDoesNotMutateTarget() {
+		MaybeInt maybeInt = noInt();
+		try {
+			maybeInt.add(nextInt());
+		} catch (Exception e) {}
+		assertThat(maybeInt, isNoInt());
+	}
+
+	@Test
+	public void addAllOnNoIntWithEmptyCollectionReturnsFalse() {
+		assertFalse(noInt().addAll(emptySet()));
+	}
+
+	@Test
+	public void addAllOnNoIntWithEmptyCollectionDoesNotMutateTarget() {
+		MaybeInt maybeInt = noInt();
+		maybeInt.addAll(emptySet());
+		assertThat(maybeInt, isNoInt());
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void addAllOnNoIntWithPopulatedCollectionThrowsUnsupportedOperationException() {
+		noInt().addAll(singleton(nextInt()));
+	}
+
+	@Test
+	public void addAllOnNoIntWithPopulatedCollectionDoesNotMutateTarget() {
+		MaybeInt maybeInt = noInt();
+		try {
+			maybeInt.addAll(singleton(nextInt()));
+		} catch (Exception e) {}
+		assertThat(maybeInt, isNoInt());
+	}
+
+	@Test
+	public void removeOnNoIntReturnsFalse() {
+		assertFalse(noInt().remove(nextInt()));
+	}
+
+	@Test
+	public void removeOnNoIntDoesNotMutateTarget() {
+		MaybeInt maybeInt = noInt();
+		maybeInt.remove(nextInt());
+		assertThat(maybeInt, isNoInt());
+	}
+
+	@Test
+	public void removeAllOnNoIntReturnsFalse() {
+		assertFalse(noInt().removeAll(singleton(nextInt())));
+	}
+
+	@Test
+	public void removeAllOnNoIntDoesNotMutateTarget() {
+		MaybeInt maybeInt = noInt();
+		maybeInt.removeAll(singleton(nextInt()));
+		assertThat(maybeInt, isNoInt());
+	}
+
+	@Test
+	public void retainAllOnNoIntReturnsFalse() {
+		assertFalse(noInt().retainAll(singleton(nextInt())));
+	}
+
+	@Test
+	public void retainAllOnNoIntDoesNotMutateTarget() {
+		MaybeInt maybeInt = noInt();
+		maybeInt.retainAll(singleton(nextInt()));
+		assertThat(maybeInt, isNoInt());
+	}
+
+	@Test
+	public void clearOnNoIntDoesNotMutateTarget() {
+		MaybeInt maybeInt = noInt();
+		maybeInt.clear();
+		assertThat(maybeInt, isNoInt());
+	}
+
+	@Test
+	public void noIntToArrayReturnsArrayWithSize0() {
+		assertThat(noInt().toArray(), is(arrayWithSize(0)));
+	}
+
+	@Test
+	public void noIntToArrayWithArrayOfSize0ReturnsArrayOfSize0() {
+		assertThat(noInt().toArray(new Object[0]), is(arrayWithSize(0)));
+	}
+
+	@Test
+	public void noIntToArrayWithArrayOfSize1ReturnsArrayContainingNull() {
+		assertThat(noInt().toArray(new Object[] { new Object() }), is(arrayContaining((Object) null)));
+	}
+
+	@Test
+	public void noIntToArrayWithArrayOfSize2ReturnsArrayContainingNullAndRemainingElements() {
+		Object value1 = new Object();
+		Object value2 = new Object();
+		assertThat(noInt().toArray(new Object[] { value1, value2 }), is(arrayContaining(null, value2)));
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void noIntToArrayWithNullArrayThrowsNullPointerException() {
+		noInt().toArray(null);
+	}
+
+	@Test
+	public void noIntIteratorHasNoElements() {
+		Iterator<Integer> iterator = noInt().iterator();
+		assertFalse(iterator.hasNext());
+		try {
+			iterator.next();
+			fail();
+		} catch (NoSuchElementException e) {}
+	}
+
+	@Test(expected = UnsupportedOperationException.class)
+	public void noIntIteratorDoesNotSupportRemove() {
+		noInt().iterator().remove();
+	}
+
+	@Test
+	public void noIntHashCodeIs0() {
+		assertThat(noInt().hashCode(), is(0));
+	}
+
+	@Test
+	public void noIntIsEqualToNoInt() {
+		assertThat(noInt(), is(equalTo(noInt())));
+	}
+
+	@Test
+	public void noIntIsNotEqualToJustInt() {
+		assertThat(noInt(), is(not(equalTo(justInt(nextInt())))));
+	}
+
+	@Test
+	public void noIntIsNotEqualToArbitraryObject() {
+		assertThat(noInt(), is(not(equalTo(new Object()))));
+	}
+
+	@Test
+	public void noIntIsNotEqualToNull() {
+		assertThat(noInt(), is(not(equalTo(null))));
+	}
+
+	@Test
+	public void noIntToStringDescribesSelf() {
+		assertThat(noInt().toString(), is("NoInt []"));
+	}
+
+	@Test
+	public void noIntIsSerializable() {
+		assertThat(roundtrip(noInt()), isNoInt());
+	}
+
+	@Test
+	public void maybeIntOfIntegerIsJustInt() {
+		Integer value = new Integer(nextInt());
+		assertThat(maybeInt(value), isJustInt(value));
+	}
+
+	@Test
+	public void maybeIntOfNullIsNoInt() {
+		assertThat(maybeInt(null), isNoInt());
 	}
 
 	private static void consumerInvocationOnJustIntWithThrowingConsumerPropagatesThrownException(
@@ -784,9 +1056,9 @@ public class MaybeIntTest {
 		verifyNoMoreInteractions(functionMock);
 	}
 
-	public static <F, M> void functionInvocationOnNoIntReturnsValue(
-			BinaryFunction<? super MaybeInt, ? super F, ? extends M, ? extends RuntimeException> maybeFunctionApplication,
-			Class<? super F> delegateFunctionClass, Matcher<? super M> valueMatcher) {
+	public static <F, R> void functionInvocationOnNoIntReturnsValue(
+			BinaryFunction<? super MaybeInt, ? super F, ? extends R, ? extends RuntimeException> maybeFunctionApplication,
+			Class<? super F> delegateFunctionClass, Matcher<? super R> valueMatcher) {
 		assertThat(maybeFunctionApplication.apply(noInt(), (F) mock(delegateFunctionClass)), valueMatcher);
 	}
 

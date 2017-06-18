@@ -53,7 +53,7 @@ public abstract class MaybeChar implements Serializable {
 
 	public abstract <T, X extends Throwable> Maybe<T> map(CharFunction<? extends T, ? extends X> function) throws X;
 
-	public static MaybeChar just(char value) {
+	public static MaybeChar justChar(char value) {
 		return new Just(value);
 	}
 
@@ -108,22 +108,22 @@ public abstract class MaybeChar implements Serializable {
 
 		@Override
 		public <X extends Throwable> MaybeBoolean mapToBoolean(CharToBooleanFunction<? extends X> function) throws X {
-			return MaybeBoolean.just(function.apply(value));
+			return MaybeBoolean.justBoolean(function.apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeChar mapToChar(CharUnaryOperator<? extends X> function) throws X {
-			return just(function.apply(value));
+			return justChar(function.apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeByte mapToByte(CharToByteFunction<? extends X> function) throws X {
-			return MaybeByte.just(function.apply(value));
+			return MaybeByte.justByte(function.apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeShort mapToShort(CharToShortFunction<? extends X> function) throws X {
-			return MaybeShort.just(function.apply(value));
+			return MaybeShort.justShort(function.apply(value));
 		}
 
 		@Override
@@ -133,17 +133,17 @@ public abstract class MaybeChar implements Serializable {
 
 		@Override
 		public <X extends Throwable> MaybeLong mapToLong(CharToLongFunction<? extends X> function) throws X {
-			return MaybeLong.just(function.apply(value));
+			return MaybeLong.justLong(function.apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeFloat mapToFloat(CharToFloatFunction<? extends X> function) throws X {
-			return MaybeFloat.just(function.apply(value));
+			return MaybeFloat.justFloat(function.apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeDouble mapToDouble(CharToDoubleFunction<? extends X> function) throws X {
-			return MaybeDouble.just(function.apply(value));
+			return MaybeDouble.justDouble(function.apply(value));
 		}
 
 		@Override
@@ -214,12 +214,12 @@ public abstract class MaybeChar implements Serializable {
 
 		@Override
 		public <X extends Throwable> MaybeByte mapToByte(CharToByteFunction<? extends X> function) throws X {
-			return MaybeByte.nothing();
+			return MaybeByte.noByte();
 		}
 
 		@Override
 		public <X extends Throwable> MaybeShort mapToShort(CharToShortFunction<? extends X> function) throws X {
-			return MaybeShort.nothing();
+			return MaybeShort.noShort();
 		}
 
 		@Override

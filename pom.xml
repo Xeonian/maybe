@@ -8,7 +8,7 @@
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>xeona-maybe-parent</artifactId>
+	<artifactId>maybe-parent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
@@ -16,9 +16,9 @@
 	<description>Parent POM for projects under the Xeona Maybe family</description>
 
 	<modules>
-		<module>xeona-maybe</module>
-		<module>xeona-maybe-test</module>
-		<module>xeona-maybe-tests</module>
+		<module>maybe</module>
+		<module>maybe-matchers</module>
+		<module>maybe-tests</module>
 	</modules>
 
 	<build>

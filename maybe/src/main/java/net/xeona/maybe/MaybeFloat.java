@@ -53,7 +53,7 @@ public abstract class MaybeFloat {
 
 	public abstract <R, X extends Throwable> Maybe<R> map(FloatFunction<? extends R, ? extends X> function) throws X;
 
-	public static MaybeFloat just(float value) {
+	public static MaybeFloat justFloat(float value) {
 		return new Just(value);
 	}
 
@@ -107,22 +107,22 @@ public abstract class MaybeFloat {
 
 		@Override
 		public <X extends Throwable> MaybeBoolean mapToBoolean(FloatToBooleanFunction<? extends X> function) throws X {
-			return MaybeBoolean.just(function.apply(value));
+			return MaybeBoolean.justBoolean(function.apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeChar mapToChar(FloatToCharFunction<? extends X> function) throws X {
-			return MaybeChar.just(function.apply(value));
+			return MaybeChar.justChar(function.apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeByte mapToByte(FloatToByteFunction<? extends X> function) throws X {
-			return MaybeByte.just(function.apply(value));
+			return MaybeByte.justByte(function.apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeShort mapToShort(FloatToShortFunction<? extends X> function) throws X {
-			return MaybeShort.just(function.apply(value));
+			return MaybeShort.justShort(function.apply(value));
 		}
 
 		@Override
@@ -132,17 +132,17 @@ public abstract class MaybeFloat {
 
 		@Override
 		public <X extends Throwable> MaybeLong mapToLong(FloatToLongFunction<? extends X> function) throws X {
-			return MaybeLong.just(function.apply(value));
+			return MaybeLong.justLong(function.apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeFloat mapToFloat(FloatUnaryOperator<? extends X> function) throws X {
-			return just(function.apply(value));
+			return justFloat(function.apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeDouble mapToDouble(FloatToDoubleFunction<? extends X> function) throws X {
-			return MaybeDouble.just(function.apply(value));
+			return MaybeDouble.justDouble(function.apply(value));
 		}
 
 		@Override
@@ -214,12 +214,12 @@ public abstract class MaybeFloat {
 
 		@Override
 		public <X extends Throwable> MaybeByte mapToByte(FloatToByteFunction<? extends X> function) throws X {
-			return MaybeByte.nothing();
+			return MaybeByte.noByte();
 		}
 
 		@Override
 		public <X extends Throwable> MaybeShort mapToShort(FloatToShortFunction<? extends X> function) throws X {
-			return MaybeShort.nothing();
+			return MaybeShort.noShort();
 		}
 
 		@Override

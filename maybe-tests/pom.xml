@@ -4,15 +4,15 @@
 
 	<parent>
 		<groupId>net.xeona</groupId>
-		<artifactId>xeona-maybe-parent</artifactId>
+		<artifactId>maybe-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>xeona-maybe-test</artifactId>
+	<artifactId>maybe-tests</artifactId>
 	<packaging>jar</packaging>
 
-	<name>Maybe Test Utilities</name>
-	<description>Test utilities for use with the xeona-maybe library</description>
+	<name>Maybe Tests</name>
+	<description>Tests for the xeona-maybe project</description>
 
 	<build>
 		<plugins>
@@ -42,15 +42,31 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>net.xeona</groupId>
-			<artifactId>xeona-maybe</artifactId>
-			<version>${project.version}</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-text</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>22.0</version>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
-			<groupId>org.hamcrest</groupId>
-			<artifactId>hamcrest-all</artifactId>
-			<scope>compile</scope>
+			<groupId>net.xeona</groupId>
+			<artifactId>maybe</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>net.xeona</groupId>
+			<artifactId>maybe-matchers</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
 </project>

@@ -57,7 +57,7 @@ public abstract class MaybeDouble implements Serializable {
 
 	public abstract <R, X extends Throwable> Maybe<R> map(DoubleFunction<? extends R, ? extends X> function) throws X;
 
-	public static MaybeDouble just(double value) {
+	public static MaybeDouble justDouble(double value) {
 		return new Just(value);
 	}
 
@@ -66,7 +66,7 @@ public abstract class MaybeDouble implements Serializable {
 	}
 
 	public static MaybeDouble fromOptionalDouble(OptionalDouble optionalDouble) {
-		return optionalDouble.isPresent() ? just(optionalDouble.getAsDouble()) : nothing();
+		return optionalDouble.isPresent() ? justDouble(optionalDouble.getAsDouble()) : nothing();
 	}
 
 	public static OptionalDouble toOptionalDouble(MaybeDouble maybeDouble) {
@@ -121,22 +121,22 @@ public abstract class MaybeDouble implements Serializable {
 
 		@Override
 		public <X extends Throwable> MaybeBoolean mapToBoolean(DoubleToBooleanFunction<? extends X> function) throws X {
-			return MaybeBoolean.just(function.apply(value));
+			return MaybeBoolean.justBoolean(function.apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeChar mapToChar(DoubleToCharFunction<? extends X> function) throws X {
-			return MaybeChar.just(function.apply(value));
+			return MaybeChar.justChar(function.apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeByte mapToByte(DoubleToByteFunction<? extends X> function) throws X {
-			return MaybeByte.just(function.apply(value));
+			return MaybeByte.justByte(function.apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeShort mapToShort(DoubleToShortFunction<? extends X> function) throws X {
-			return MaybeShort.just(function.apply(value));
+			return MaybeShort.justShort(function.apply(value));
 		}
 
 		@Override
@@ -146,17 +146,17 @@ public abstract class MaybeDouble implements Serializable {
 
 		@Override
 		public <X extends Throwable> MaybeLong mapToLong(DoubleToLongFunction<? extends X> function) throws X {
-			return MaybeLong.just(function.apply(value));
+			return MaybeLong.justLong(function.apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeFloat mapToFloat(DoubleToFloatFunction<? extends X> function) throws X {
-			return MaybeFloat.just(function.apply(value));
+			return MaybeFloat.justFloat(function.apply(value));
 		}
 
 		@Override
 		public <X extends Throwable> MaybeDouble mapToDouble(DoubleUnaryOperator<? extends X> function) throws X {
-			return MaybeDouble.just(function.apply(value));
+			return MaybeDouble.justDouble(function.apply(value));
 		}
 
 		@Override
@@ -229,12 +229,12 @@ public abstract class MaybeDouble implements Serializable {
 
 		@Override
 		public <X extends Throwable> MaybeByte mapToByte(DoubleToByteFunction<? extends X> function) throws X {
-			return MaybeByte.nothing();
+			return MaybeByte.noByte();
 		}
 
 		@Override
 		public <X extends Throwable> MaybeShort mapToShort(DoubleToShortFunction<? extends X> function) throws X {
-			return MaybeShort.nothing();
+			return MaybeShort.noShort();
 		}
 
 		@Override
