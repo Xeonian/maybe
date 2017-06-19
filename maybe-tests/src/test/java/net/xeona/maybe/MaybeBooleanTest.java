@@ -1,38 +1,53 @@
 package net.xeona.maybe;
 
 import static net.xeona.maybe.MaybeBoolean.justBoolean;
+import static net.xeona.maybe.NumberMatchers.doubleBinaryEqualTo;
+import static net.xeona.maybe.NumberMatchers.floatBinaryEqualTo;
 import static net.xeona.maybe.RandomNumberUtility.aRandomByte;
+import static net.xeona.maybe.RandomNumberUtility.aRandomDouble;
+import static net.xeona.maybe.RandomNumberUtility.aRandomFloat;
+import static net.xeona.maybe.RandomNumberUtility.aRandomLong;
+import static net.xeona.maybe.RandomNumberUtility.aRandomShort;
 import static net.xeona.maybe.matcher.MaybeBooleanMatcher.isJustBoolean;
 import static net.xeona.maybe.matcher.MaybeBooleanMatcher.isNoBoolean;
 import static net.xeona.maybe.matcher.MaybeByteMatcher.isJustByte;
+import static net.xeona.maybe.matcher.MaybeDoubleMatcher.isJustDouble;
+import static net.xeona.maybe.matcher.MaybeFloatMatcher.isJustFloat;
+import static net.xeona.maybe.matcher.MaybeIntMatcher.isJustInt;
+import static net.xeona.maybe.matcher.MaybeLongMatcher.isJustLong;
+import static net.xeona.maybe.matcher.MaybeMatcher.isJust;
 import static org.apache.commons.lang3.RandomUtils.nextBoolean;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.sameInstance;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
+import org.apache.commons.lang3.RandomUtils;
 import org.hamcrest.Matcher;
 import org.junit.Test;
 
 import net.xeona.function.BinaryConsumer;
 import net.xeona.function.BinaryFunction;
 import net.xeona.function.BooleanConsumer;
+import net.xeona.function.BooleanFunction;
 import net.xeona.function.BooleanProvider;
 import net.xeona.function.BooleanToByteFunction;
 import net.xeona.function.BooleanToCharFunction;
+import net.xeona.function.BooleanToDoubleFunction;
+import net.xeona.function.BooleanToFloatFunction;
+import net.xeona.function.BooleanToIntFunction;
+import net.xeona.function.BooleanToLongFunction;
+import net.xeona.function.BooleanToShortFunction;
 import net.xeona.function.BooleanUnaryOperator;
 import net.xeona.function.Provider;
 import net.xeona.function.ToBooleanFunction;
 import net.xeona.function.VoidFunction;
 import net.xeona.maybe.matcher.MaybeCharMatcher;
+import net.xeona.maybe.matcher.MaybeShortMatcher;
 
 @SuppressWarnings("unchecked")
 public class MaybeBooleanTest {
@@ -236,72 +251,227 @@ public class MaybeBooleanTest {
 		justBoolean(nextBoolean()).mapToByte(null);
 	}
 
+	@Test
+	public void mapToShortOnJustBooleanInvokesMapFunction() {
+		MaybeBooleanTest
+				.<BooleanToShortFunction<RuntimeException>> functionWithDelegateFunctionOnJustBooleanInvokesDelegateFunctionWithValue(
+						MaybeBoolean::mapToShort, BooleanToShortFunction.class, BooleanToShortFunction::apply);
+	}
+
+	@Test
+	public void mapToShortOnJustBooleanReturnsJustShortOfMapFunctionReturnValue() {
+		MaybeBooleanTest
+				.<BooleanToShortFunction<RuntimeException>, Short, MaybeShort> functionWithDelegateFunctionOnJustBooleanReturnsValue(
+						MaybeBoolean::mapToShort, BooleanToShortFunction.class, BooleanToShortFunction::apply,
+						aRandomShort(), (value, mappedValue) -> MaybeShortMatcher.isJustShort(mappedValue));
+	}
+
+	@Test
+	public void mapToShortOnJustBooleanWithThrowingMapFunctionPropagatesThrownException() {
+		MaybeBooleanTest
+				.<BooleanToShortFunction<RuntimeException>> functionWithThrowingDelegateFunctionPropagatesThrownException(
+						MaybeBoolean::mapToShort, BooleanToShortFunction.class, BooleanToShortFunction::apply);
+	}
+
+	@Test
+	public void mapToShortOnJustBooleanWithNullMapFunctionThrowsNullPointerException() {
+		functionWithNullArgumentThrowsNullPointerException(
+				(BinaryConsumer<MaybeBoolean, BooleanToShortFunction<RuntimeException>, RuntimeException>) MaybeBoolean::mapToShort);
+	}
+
+	@Test
+	public void mapToIntOnJustBooleanInvokesMapFunction() {
+		MaybeBooleanTest
+				.<BooleanToIntFunction<RuntimeException>> functionWithDelegateFunctionOnJustBooleanInvokesDelegateFunctionWithValue(
+						MaybeBoolean::mapToInt, BooleanToIntFunction.class, BooleanToIntFunction::apply);
+	}
+
+	@Test
+	public void mapToIntOnJustBooleanReturnsJustIntOfMapFunctionReturnValue() {
+		MaybeBooleanTest
+				.<BooleanToIntFunction<RuntimeException>, Integer, MaybeInt> functionWithDelegateFunctionOnJustBooleanReturnsValue(
+						MaybeBoolean::mapToInt, BooleanToIntFunction.class, BooleanToIntFunction::apply, nextInt(),
+						(value, mappedValue) -> isJustInt(mappedValue));
+	}
+
+	@Test
+	public void mapToIntOnJustBooleanWithThrowingFunctionPropagatesThrownException() {
+		MaybeBooleanTest
+				.<BooleanToIntFunction<RuntimeException>> functionWithThrowingDelegateFunctionPropagatesThrownException(
+						MaybeBoolean::mapToInt, BooleanToIntFunction.class, BooleanToIntFunction::apply);
+	}
+
+	@Test
+	public void mapToIntOnJustBooleanWithNullMapFunctionThrowsNullPointerException() {
+		functionWithNullArgumentThrowsNullPointerException(
+				(BinaryConsumer<MaybeBoolean, BooleanToIntFunction<RuntimeException>, RuntimeException>) MaybeBoolean::mapToInt);
+	}
+
+	@Test
+	public void mapToLongOnJustBooleanInvokesMapFunction() {
+		MaybeBooleanTest
+				.<BooleanToLongFunction<RuntimeException>> functionWithDelegateFunctionOnJustBooleanInvokesDelegateFunctionWithValue(
+						MaybeBoolean::mapToLong, BooleanToLongFunction.class, BooleanToLongFunction::apply);
+	}
+
+	@Test
+	public void mapToLongOnJustBooleanReturnsJustLongOfMapFunctionReturnValue() {
+		MaybeBooleanTest
+				.<BooleanToLongFunction<RuntimeException>, Long, MaybeLong> functionWithDelegateFunctionOnJustBooleanReturnsValue(
+						MaybeBoolean::mapToLong, BooleanToLongFunction.class, BooleanToLongFunction::apply,
+						aRandomLong(), (value, mappedValue) -> isJustLong(mappedValue));
+	}
+
+	@Test
+	public void mapToLongOnJustBooleanWithThrowingFunctionPropagatesThrownException() {
+		MaybeBooleanTest
+				.<BooleanToLongFunction<RuntimeException>> functionWithThrowingDelegateFunctionPropagatesThrownException(
+						MaybeBoolean::mapToLong, BooleanToLongFunction.class, BooleanToLongFunction::apply);
+	}
+
+	@Test
+	public void mapToLongOnJustBooleanWithNullFunctionThrowsNullPointerException() {
+		functionWithNullArgumentThrowsNullPointerException(
+				(BinaryConsumer<MaybeBoolean, BooleanToLongFunction<RuntimeException>, RuntimeException>) MaybeBoolean::mapToLong);
+	}
+
+	@Test
+	public void mapToFloatOnJustBooleanInvokesMapFunction() {
+		MaybeBooleanTest
+				.<BooleanToFloatFunction<RuntimeException>> functionWithDelegateFunctionOnJustBooleanInvokesDelegateFunctionWithValue(
+						MaybeBoolean::mapToFloat, BooleanToFloatFunction.class, BooleanToFloatFunction::apply);
+	}
+
+	@Test
+	public void mapToFloatOnJustBooleanReturnsJustFloatOfMapFunctionReturnValue() {
+		MaybeBooleanTest
+				.<BooleanToFloatFunction<RuntimeException>, Float, MaybeFloat> functionWithDelegateFunctionOnJustBooleanReturnsValue(
+						MaybeBoolean::mapToFloat, BooleanToFloatFunction.class, BooleanToFloatFunction::apply,
+						aRandomFloat(), (value, mappedValue) -> isJustFloat(floatBinaryEqualTo(mappedValue)));
+	}
+
+	@Test
+	public void mapToFloatOnJustBooleanWithThrowingFunctionPropagatesThrownException() {
+		MaybeBooleanTest
+				.<BooleanToFloatFunction<RuntimeException>> functionWithThrowingDelegateFunctionPropagatesThrownException(
+						MaybeBoolean::mapToFloat, BooleanToFloatFunction.class, BooleanToFloatFunction::apply);
+	}
+
+	@Test
+	public void mapToFloatOnJustBooleanWithNullFunctionThrowsNullPointerException() {
+		functionWithNullArgumentThrowsNullPointerException(
+				(BinaryConsumer<MaybeBoolean, BooleanToFloatFunction<RuntimeException>, RuntimeException>) MaybeBoolean::mapToFloat);
+	}
+
+	@Test
+	public void mapToDoubleOnJustBooleanInvokesMapFunction() {
+		MaybeBooleanTest
+				.<BooleanToDoubleFunction<RuntimeException>> functionWithDelegateFunctionOnJustBooleanInvokesDelegateFunctionWithValue(
+						MaybeBoolean::mapToDouble, BooleanToDoubleFunction.class, BooleanToDoubleFunction::apply);
+	}
+
+	@Test
+	public void mapToDoubleOnJustBooleanReturnsJustDoubleOfMapFunctionReturnValue() {
+		MaybeBooleanTest
+				.<BooleanToDoubleFunction<RuntimeException>, Double, MaybeDouble> functionWithDelegateFunctionOnJustBooleanReturnsValue(
+						MaybeBoolean::mapToDouble, BooleanToDoubleFunction.class, BooleanToDoubleFunction::apply,
+						aRandomDouble(), (value, mappedValue) -> isJustDouble(doubleBinaryEqualTo(mappedValue)));
+	}
+
+	@Test
+	public void mapToDoubleOnJustBooleanWithThrowingMapFunctionPropagatesThrownException() {
+		MaybeBooleanTest
+				.<BooleanToDoubleFunction<RuntimeException>> functionWithThrowingDelegateFunctionPropagatesThrownException(
+						MaybeBoolean::mapToDouble, BooleanToDoubleFunction.class, BooleanToDoubleFunction::apply);
+	}
+
+	@Test
+	public void mapToDoubleOnJustBooleanWithNullMapFunctionThrowsNullPointerException() {
+		functionWithNullArgumentThrowsNullPointerException(
+				(BinaryConsumer<MaybeBoolean, BooleanToDoubleFunction<RuntimeException>, RuntimeException>) MaybeBoolean::mapToDouble);
+	}
+
+	@Test
+	public void mapOnJustBooleanInvokesMapFunction() {
+		MaybeBooleanTest
+				.<BooleanFunction<Object, RuntimeException>> functionWithDelegateFunctionOnJustBooleanInvokesDelegateFunctionWithValue(
+						MaybeBoolean::map, BooleanFunction.class, BooleanFunction::apply);
+	}
+
+	@Test
+	public void mapOnJustBooleanReturnsJustOfMapFunctionReturnValue() {
+		MaybeBooleanTest
+				.<BooleanFunction<Object, RuntimeException>, Object, Maybe<Object>> functionWithDelegateFunctionOnJustBooleanReturnsValue(
+						MaybeBoolean::map, BooleanFunction.class, BooleanFunction::apply, new Object(),
+						(value, mappedValue) -> isJust(mappedValue));
+	}
+
+	@Test
+	public void mapOnJustBooleanWithThrowingMapFunctionPropagatesThrownException() {
+		MaybeBooleanTest
+				.<BooleanFunction<Object, RuntimeException>> functionWithThrowingDelegateFunctionPropagatesThrownException(
+						MaybeBoolean::map, BooleanFunction.class, BooleanFunction::apply);
+	}
+
+	@Test
+	public void mapOnJustBooleanWithNullMapFunctionThrowsNullPointerException() {
+		functionWithNullArgumentThrowsNullPointerException(
+				(BinaryConsumer<MaybeBoolean, BooleanFunction<Object, RuntimeException>, RuntimeException>) MaybeBoolean::map);
+	}
+
 	private static void extractValueFunctionOnJustBooleanReturnsValue(
 			ToBooleanFunction<? super MaybeBoolean, ? extends RuntimeException> extractFunction) {
-		boolean value = nextBoolean();
-		assertEquals(extractFunction.apply(justBoolean(value)), value);
+		MaybeTestUtility.extractValueFunctionOnJustReturnsValue(RandomUtils::nextBoolean, MaybeBoolean::justBoolean,
+				extractFunction);
 	}
 
 	private static <P> void extractValueFunctionWithAlternativeProviderOnJustBooleanDoesNotInvokeProvider(
 			BinaryFunction<? super MaybeBoolean, ? super P, ?, RuntimeException> extractFunction,
 			Class<? super P> providerClass) {
-		P providerMock = (P) mock(providerClass);
-		extractFunction.apply(justBoolean(nextBoolean()), providerMock);
-		verifyNoMoreInteractions(providerMock);
+		MaybeTestUtility.extractValueFunctionWithAlternativeProviderOnJustDoesNotInvokeProvider(
+				RandomUtils::nextBoolean, MaybeBoolean::justBoolean, extractFunction, providerClass);
 	}
 
 	private static void functionWithIfPresentConsumerOnJustBooleanInvokesConsumerWithValue(
 			BinaryConsumer<? super MaybeBoolean, ? super BooleanConsumer<RuntimeException>, ? extends RuntimeException> functionInvocation) {
-		boolean value = nextBoolean();
-		BooleanConsumer<RuntimeException> consumerMock = mock(BooleanConsumer.class);
-		functionInvocation.consume(justBoolean(value), consumerMock);
-		verify(consumerMock).consume(value);
-		verifyNoMoreInteractions(consumerMock);
+		MaybeTestUtility
+				.<Boolean, MaybeBoolean, BooleanConsumer<RuntimeException>> justFunctionInvokesDelegateFunctionWithValue(
+						RandomUtils::nextBoolean, MaybeBoolean::justBoolean, functionInvocation, BooleanConsumer.class,
+						BooleanConsumer::consume);
 	}
 
 	private static void functionWithIfPresentConsumerOnJustBooleanWithThrowingConsumerPropagatesThrownException(
 			BinaryConsumer<? super MaybeBoolean, ? super BooleanConsumer<RuntimeException>, ? extends RuntimeException> functionInvocation) {
-		boolean value = nextBoolean();
-		BooleanConsumer<RuntimeException> consumerMock = mock(BooleanConsumer.class);
-		RuntimeException exception = new RuntimeException();
-		doThrow(exception).when(consumerMock).consume(value);
-		try {
-			functionInvocation.consume(justBoolean(value), consumerMock);
-			fail();
-		} catch (RuntimeException e) {
-			assertThat(e, is(sameInstance(exception)));
-		}
+		MaybeTestUtility
+				.<Boolean, MaybeBoolean, BooleanConsumer<RuntimeException>> justFunctionWithThrowingDelegateFunctionPropagatesThrownException(
+						RandomUtils::nextBoolean, MaybeBoolean::justBoolean, functionInvocation, BooleanConsumer.class,
+						BooleanConsumer::consume);
 	}
 
 	private static void functionWithIfAbsentFunctionOnJustBooleanDoesNotInvokeIfAbsentFunction(
 			BinaryConsumer<? super MaybeBoolean, ? super VoidFunction<RuntimeException>, ? extends RuntimeException> functionInvocation) {
-		VoidFunction<RuntimeException> functionMock = mock(VoidFunction.class);
-		functionInvocation.consume(justBoolean(nextBoolean()), functionMock);
-		verifyNoMoreInteractions(functionMock);
+		MaybeTestUtility
+				.<Boolean, MaybeBoolean, VoidFunction<RuntimeException>> justFunctionDoesNotInvokeDelegateFunction(
+						RandomUtils::nextBoolean, MaybeBoolean::justBoolean, functionInvocation, VoidFunction.class);
 	}
 
 	private static <F> void functionWithDelegateFunctionOnJustBooleanInvokesDelegateFunctionWithValue(
 			BinaryConsumer<? super MaybeBoolean, ? super F, ? extends RuntimeException> functionInvocation,
 			Class<? super F> delegateFunctionClass,
 			BinaryConsumer<? super F, ? super Boolean, ? extends RuntimeException> delegateFunctionInvocation) {
-		boolean value = nextBoolean();
-		F delegateFunctionMock = (F) mock(delegateFunctionClass);
-		functionInvocation.consume(justBoolean(value), delegateFunctionMock);
-		delegateFunctionInvocation.consume(verify(delegateFunctionMock), value);
-		verifyNoMoreInteractions(delegateFunctionMock);
+		MaybeTestUtility.justFunctionInvokesDelegateFunctionWithValue(RandomUtils::nextBoolean,
+				MaybeBoolean::justBoolean, functionInvocation, delegateFunctionClass, delegateFunctionInvocation);
 	}
 
-	private static <F, T, U> void functionWithDelegateFunctionOnJustBooleanReturnsValue(
-			BinaryFunction<? super MaybeBoolean, ? super F, ? extends U, ? extends RuntimeException> functionInvocation,
+	private static <F, T, M> void functionWithDelegateFunctionOnJustBooleanReturnsValue(
+			BinaryFunction<? super MaybeBoolean, ? super F, ? extends M, ? extends RuntimeException> functionInvocation,
 			Class<? super F> delegateFunctionClass,
 			BinaryFunction<? super F, ? super Boolean, T, ? extends RuntimeException> delegateFunctionInvocation,
 			T delegateFunctionReturnValue,
-			BinaryFunction<? super Boolean, ? super T, ? extends Matcher<? super U>, ? extends RuntimeException> expectedReturnValueMatcherFunction) {
-		boolean value = nextBoolean();
-		F delegateFunctionMock = (F) mock(delegateFunctionClass);
-		when(delegateFunctionInvocation.apply(delegateFunctionMock, value)).thenReturn(delegateFunctionReturnValue);
-		assertThat(functionInvocation.apply(justBoolean(value), delegateFunctionMock),
-				expectedReturnValueMatcherFunction.apply(value, delegateFunctionReturnValue));
+			BinaryFunction<? super Boolean, ? super T, ? extends Matcher<? super M>, ? extends RuntimeException> expectedReturnValueMatcherFunction) {
+		MaybeTestUtility.justFunctionWithDelegateFunctionReturnsValue(RandomUtils::nextBoolean,
+				MaybeBoolean::justBoolean, functionInvocation, delegateFunctionClass, delegateFunctionInvocation,
+				delegateFunctionReturnValue, expectedReturnValueMatcherFunction);
 	}
 
 	private static <F> void functionWithThrowingDelegateFunctionPropagatesThrownException(
@@ -318,6 +488,12 @@ public class MaybeBooleanTest {
 		} catch (RuntimeException e) {
 			assertThat(e, is(sameInstance(exception)));
 		}
+	}
+
+	private static void functionWithNullArgumentThrowsNullPointerException(
+			BinaryConsumer<? super MaybeBoolean, ?, ? extends RuntimeException> functionInvocation) {
+		MaybeTestUtility.justFunctionWithNullArgumentThrowsNullPointerException(RandomUtils::nextBoolean,
+				MaybeBoolean::justBoolean, functionInvocation);
 	}
 
 	private static char nextChar() {

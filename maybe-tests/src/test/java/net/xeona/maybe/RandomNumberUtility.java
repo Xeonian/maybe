@@ -24,4 +24,12 @@ public class RandomNumberUtility {
 		return Longs.fromByteArray(nextBytes(Long.BYTES));
 	}
 
+	public static float aRandomFloat() {
+		return Float.intBitsToFloat(aRandomInt());
+	}
+
+	public static double aRandomDouble() {
+		return Double.longBitsToDouble(aRandomLong());
+	}
+
 }
