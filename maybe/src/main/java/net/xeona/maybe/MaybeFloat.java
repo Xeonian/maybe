@@ -204,7 +204,7 @@ public abstract class MaybeFloat {
 
 		@Override
 		public <X extends Throwable> MaybeBoolean mapToBoolean(FloatToBooleanFunction<? extends X> function) throws X {
-			return MaybeBoolean.nothing();
+			return MaybeBoolean.noBoolean();
 		}
 
 		@Override
@@ -229,7 +229,7 @@ public abstract class MaybeFloat {
 
 		@Override
 		public <X extends Throwable> MaybeLong mapToLong(FloatToLongFunction<? extends X> function) throws X {
-			return MaybeLong.nothing();
+			return MaybeLong.noLong();
 		}
 
 		@Override

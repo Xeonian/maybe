@@ -204,7 +204,7 @@ public abstract class MaybeChar implements Serializable {
 
 		@Override
 		public <X extends Throwable> MaybeBoolean mapToBoolean(CharToBooleanFunction<? extends X> function) throws X {
-			return MaybeBoolean.nothing();
+			return MaybeBoolean.noBoolean();
 		}
 
 		@Override
@@ -229,7 +229,7 @@ public abstract class MaybeChar implements Serializable {
 
 		@Override
 		public <X extends Throwable> MaybeLong mapToLong(CharToLongFunction<? extends X> function) throws X {
-			return MaybeLong.nothing();
+			return MaybeLong.noLong();
 		}
 
 		@Override

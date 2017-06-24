@@ -767,7 +767,7 @@ public class MaybeTest {
 	public void mapToBooleanOnNothingReturnsNothingAndDoesNotInvokeMapFunction() {
 		MaybeTest
 				.<ToBooleanFunction<Object, RuntimeException>, MaybeBoolean> mapOnNothingReturnsNothingAndDoesNotInvokeFunction(
-						Maybe::mapToBoolean, ToBooleanFunction.class, MaybeBoolean.nothing());
+						Maybe::mapToBoolean, ToBooleanFunction.class, MaybeBoolean.noBoolean());
 	}
 
 	@Test
@@ -802,7 +802,7 @@ public class MaybeTest {
 	public void mapToLongOnNothingReturnsNothingAndDoesNotInvokeMapFunction() {
 		MaybeTest
 				.<ToLongFunction<Object, RuntimeException>, MaybeLong> mapOnNothingReturnsNothingAndDoesNotInvokeFunction(
-						Maybe::mapToLong, ToLongFunction.class, MaybeLong.nothing());
+						Maybe::mapToLong, ToLongFunction.class, MaybeLong.noLong());
 	}
 
 	@Test

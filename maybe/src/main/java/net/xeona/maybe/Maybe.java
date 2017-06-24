@@ -410,7 +410,7 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 
 		@Override
 		public <X extends Throwable> MaybeBoolean mapToBoolean(ToBooleanFunction<? super E, ? extends X> function) {
-			return MaybeBoolean.nothing();
+			return MaybeBoolean.noBoolean();
 		}
 
 		@Override
@@ -435,7 +435,7 @@ public abstract class Maybe<E> implements Collection<E>, Serializable {
 
 		@Override
 		public <X extends Throwable> MaybeLong mapToLong(ToLongFunction<? super E, ? extends X> function) {
-			return MaybeLong.nothing();
+			return MaybeLong.noLong();
 		}
 
 		@Override

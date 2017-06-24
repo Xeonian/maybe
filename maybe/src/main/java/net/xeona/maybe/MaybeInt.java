@@ -383,7 +383,7 @@ public abstract class MaybeInt implements Collection<Integer>, Serializable {
 
 		@Override
 		public <X extends Throwable> MaybeBoolean mapToBoolean(IntToBooleanFunction<? extends X> function) throws X {
-			return MaybeBoolean.nothing();
+			return MaybeBoolean.noBoolean();
 		}
 
 		@Override
@@ -408,7 +408,7 @@ public abstract class MaybeInt implements Collection<Integer>, Serializable {
 
 		@Override
 		public <X extends Throwable> MaybeLong mapToLong(IntToLongFunction<? extends X> function) throws X {
-			return MaybeLong.nothing();
+			return MaybeLong.noLong();
 		}
 
 		@Override

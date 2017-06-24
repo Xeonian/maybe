@@ -110,8 +110,8 @@ public abstract class MaybeBoolean implements Collection<Boolean>, Serializable 
 		return value ? JustBoolean.TRUE_INSTANCE : JustBoolean.FALSE_INSTANCE;
 	}
 
-	public static MaybeBoolean nothing() {
-		return Nothing.INSTANCE;
+	public static MaybeBoolean noBoolean() {
+		return NoBoolean.INSTANCE;
 	}
 
 	public static class JustBoolean extends MaybeBoolean {
@@ -169,7 +169,7 @@ public abstract class MaybeBoolean implements Collection<Boolean>, Serializable 
 
 		@Override
 		public <X extends Throwable> MaybeBoolean filter(BooleanUnaryOperator<? extends X> predicate) throws X {
-			return predicate.apply(value) ? this : Nothing.INSTANCE;
+			return predicate.apply(value) ? this : NoBoolean.INSTANCE;
 		}
 
 		@Override
@@ -214,7 +214,7 @@ public abstract class MaybeBoolean implements Collection<Boolean>, Serializable 
 
 		@Override
 		public <T, X extends Throwable> Maybe<T> map(BooleanFunction<? extends T, ? extends X> function) throws X {
-			return maybe(function.apply(value));
+			return maybe(requireNonNull(function, "Function must not be null").apply(value));
 		}
 
 		@Override
@@ -228,8 +228,8 @@ public abstract class MaybeBoolean implements Collection<Boolean>, Serializable 
 		}
 
 		@Override
-		public boolean contains(Object o) {
-			return o instanceof Boolean && ((Boolean) o).booleanValue() == value;
+		public boolean contains(Object elementToTest) {
+			return elementToTest instanceof Boolean && ((Boolean) elementToTest).booleanValue() == value;
 		}
 
 		@Override
@@ -288,11 +288,6 @@ public abstract class MaybeBoolean implements Collection<Boolean>, Serializable 
 		}
 
 		@Override
-		public String toString() {
-			return "Just [" + value + "]";
-		}
-
-		@Override
 		public int hashCode() {
 			return Boolean.hashCode(value);
 		}
@@ -302,13 +297,18 @@ public abstract class MaybeBoolean implements Collection<Boolean>, Serializable 
 			return other instanceof JustBoolean && ((JustBoolean) other).value == value;
 		}
 
+		@Override
+		public String toString() {
+			return "JustBoolean [" + value + "]";
+		}
+
 	}
 
-	private static class Nothing extends MaybeBoolean {
+	private static class NoBoolean extends MaybeBoolean {
 
 		private static final long serialVersionUID = 1L;
 
-		private static final Nothing INSTANCE = new Nothing();
+		private static final NoBoolean INSTANCE = new NoBoolean();
 
 		private static final Iterator<Boolean> ITERATOR = new Iterator<Boolean>() {
 
@@ -468,7 +468,7 @@ public abstract class MaybeBoolean implements Collection<Boolean>, Serializable 
 
 		@Override
 		public boolean equals(Object other) {
-			return other instanceof Nothing;
+			return other instanceof NoBoolean;
 		}
 
 	}

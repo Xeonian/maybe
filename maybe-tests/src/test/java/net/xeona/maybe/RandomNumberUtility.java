@@ -2,6 +2,7 @@ package net.xeona.maybe;
 
 import static org.apache.commons.lang3.RandomUtils.nextBytes;
 
+import com.google.common.primitives.Chars;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.Longs;
 import com.google.common.primitives.Shorts;
@@ -10,6 +11,10 @@ public class RandomNumberUtility {
 
 	public static byte aRandomByte() {
 		return nextBytes(Byte.BYTES)[0];
+	}
+
+	public static char aRandomChar() {
+		return Chars.fromByteArray(nextBytes(Character.BYTES));
 	}
 
 	public static short aRandomShort() {

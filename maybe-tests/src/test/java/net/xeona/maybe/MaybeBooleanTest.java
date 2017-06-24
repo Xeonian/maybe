@@ -1,6 +1,9 @@
 package net.xeona.maybe;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.singleton;
 import static net.xeona.maybe.MaybeBoolean.justBoolean;
+import static net.xeona.maybe.MaybeBoolean.noBoolean;
 import static net.xeona.maybe.NumberMatchers.doubleBinaryEqualTo;
 import static net.xeona.maybe.NumberMatchers.floatBinaryEqualTo;
 import static net.xeona.maybe.RandomNumberUtility.aRandomByte;
@@ -18,8 +21,13 @@ import static net.xeona.maybe.matcher.MaybeLongMatcher.isJustLong;
 import static net.xeona.maybe.matcher.MaybeMatcher.isJust;
 import static org.apache.commons.lang3.RandomUtils.nextBoolean;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.sameInstance;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -417,6 +425,111 @@ public class MaybeBooleanTest {
 	public void mapOnJustBooleanWithNullMapFunctionThrowsNullPointerException() {
 		functionWithNullArgumentThrowsNullPointerException(
 				(BinaryConsumer<MaybeBoolean, BooleanFunction<Object, RuntimeException>, RuntimeException>) MaybeBoolean::map);
+	}
+
+	@Test
+	public void justBooleanIsNotEmpty() {
+		assertThat(justBoolean(nextBoolean()), is(not(empty())));
+	}
+
+	@Test
+	public void justBooleanHasSize1() {
+		assertThat(justBoolean(nextBoolean()), hasSize(1));
+	}
+
+	@Test
+	public void justBooleanContainsOwnValue() {
+		boolean value = nextBoolean();
+		assertTrue(justBoolean(value).contains(value));
+	}
+
+	@Test
+	public void justBooleanDoesNotContainOtherValue() {
+		boolean value = nextBoolean();
+		assertFalse(justBoolean(value).contains(!value));
+	}
+
+	@Test
+	public void justBooleanDoesNotContainArbitraryObject() {
+		assertFalse(justBoolean(nextBoolean()).contains(new Object()));
+	}
+
+	@Test
+	public void justBooleanDoesNotContainNull() {
+		assertFalse(justBoolean(nextBoolean()).contains(null));
+	}
+
+	@Test
+	public void justBooleanContainsAllOfCollectionOfValue() {
+		boolean value = nextBoolean();
+		assertTrue(justBoolean(value).containsAll(singleton(value)));
+	}
+
+	@Test
+	public void justBooleanDoesNotContainAllOfCollectionContainingOtherValues() {
+		boolean value = nextBoolean();
+		assertFalse(justBoolean(value).containsAll(asList(value, !value)));
+	}
+
+	@Test(expected = NullPointerException.class)
+	public void justBooleanContainsAllOfNullCollectionThrowsNullPointerException() {
+		justBoolean(nextBoolean()).containsAll(null);
+	}
+
+	// TODO: Other collection methods on justboolean
+
+	@Test
+	public void hashCodeOfJustBooleanIsHashCodeOfValue() {
+		boolean value = nextBoolean();
+		assertThat(justBoolean(value).hashCode(), is(Boolean.hashCode(value)));
+	}
+
+	@Test
+	public void justBooleanEqualsJustBooleanOfSameValue() {
+		boolean value = nextBoolean();
+		assertThat(justBoolean(value), is(equalTo(justBoolean(value))));
+	}
+
+	@Test
+	public void justBooleanDoesNotEqualJustBooleanOfDifferentValue() {
+		boolean value = nextBoolean();
+		assertThat(justBoolean(value), is(not(equalTo(justBoolean(!value)))));
+	}
+
+	@Test
+	public void justBooleanDoesNotEqualNoBoolean() {
+		assertThat(justBoolean(nextBoolean()), is(not(equalTo(noBoolean()))));
+	}
+
+	@Test
+	public void justBooleanDoesNotEqualArbitraryObject() {
+		assertThat(justBoolean(nextBoolean()), is(not(equalTo(new Object()))));
+	}
+
+	@Test
+	public void justBooleanDoesNotEqualNull() {
+		assertThat(justBoolean(nextBoolean()), is(not(equalTo(null))));
+	}
+
+	@Test
+	public void justToStringDescribesSelf() {
+		boolean value = nextBoolean();
+		assertThat(justBoolean(value).toString(), is("JustBoolean [" + value + "]"));
+	}
+	
+	@Test
+	public void noBooleanIsNotPresent() {
+		assertFalse(noBoolean().isPresent());
+	}
+	
+	@Test(expected = NullPointerException.class)
+	public void getOnNoBooleanThrowsNullPointerException() {
+		noBoolean().get();
+	}
+	
+	@Test
+	public void orElseGetOnNoBooleanReturnsAlternativeValue() {
+		boolean value = nextBoolean();
 	}
 
 	private static void extractValueFunctionOnJustBooleanReturnsValue(

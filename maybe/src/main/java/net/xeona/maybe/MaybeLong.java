@@ -1,5 +1,9 @@
 package net.xeona.maybe;
 
+import static java.util.Objects.requireNonNull;
+
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import net.xeona.function.LongConsumer;
@@ -14,8 +18,9 @@ import net.xeona.function.LongToIntFunction;
 import net.xeona.function.LongToShortFunction;
 import net.xeona.function.LongUnaryOperator;
 import net.xeona.function.Provider;
+import net.xeona.function.VoidFunction;
 
-public abstract class MaybeLong {
+public abstract class MaybeLong implements Collection<Long> {
 
 	public abstract boolean isPresent();
 
@@ -29,6 +34,11 @@ public abstract class MaybeLong {
 			Provider<? extends X, ? extends Y> provider) throws X, Y;
 
 	public abstract <X extends Throwable> void ifPresent(LongConsumer<? extends X> consumer) throws X;
+
+	public abstract <X extends Throwable> void ifAbsent(VoidFunction<? extends X> function) throws X;
+
+	public abstract <X extends Throwable, Y extends Throwable> void byPresence(LongConsumer<? extends X> ifPresent,
+			VoidFunction<? extends Y> ifAbsent) throws X, Y;
 
 	public abstract <X extends Throwable> MaybeLong filter(LongToBooleanFunction<? extends X> predicate) throws X;
 
@@ -51,12 +61,26 @@ public abstract class MaybeLong {
 
 	public abstract <T, X extends Throwable> Maybe<T> map(LongFunction<? extends T, ? extends X> function) throws X;
 
+	@Override
+	public boolean add(Long elementToAdd) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean addAll(Collection<? extends Long> elementsToAdd) {
+		if (requireNonNull(elementsToAdd, "Collection of elements to add must not be null").isEmpty()) {
+			return false;
+		} else {
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	public static MaybeLong justLong(long value) {
 		return new Just(value);
 	}
 
-	public static MaybeLong nothing() {
-		return Nothing.instance();
+	public static MaybeLong noLong() {
+		return NoLong.instance();
 	}
 
 	private static class Just extends MaybeLong {
@@ -99,8 +123,17 @@ public abstract class MaybeLong {
 		}
 
 		@Override
+		public <X extends Throwable> void ifAbsent(VoidFunction<? extends X> function) {}
+
+		@Override
+		public <X extends Throwable, Y extends Throwable> void byPresence(LongConsumer<? extends X> ifPresent,
+				VoidFunction<? extends Y> ifAbsent) throws X {
+			ifPresent.consume(value);
+		}
+
+		@Override
 		public <X extends Throwable> MaybeLong filter(LongToBooleanFunction<? extends X> predicate) throws X {
-			return predicate.apply(value) ? this : nothing();
+			return predicate.apply(value) ? this : noLong();
 		}
 
 		@Override
@@ -145,7 +178,89 @@ public abstract class MaybeLong {
 
 		@Override
 		public <T, X extends Throwable> Maybe<T> map(LongFunction<? extends T, ? extends X> function) throws X {
-			return Maybe.just(function.apply(value));
+			return Maybe.maybe(function.apply(value));
+		}
+
+		@Override
+		public boolean isEmpty() {
+			return false;
+		}
+
+		@Override
+		public int size() {
+			return 1;
+		}
+
+		@Override
+		public boolean contains(Object elementToTest) {
+			return elementToTest instanceof Long && ((Long) elementToTest).longValue() == value;
+		}
+
+		@Override
+		public Iterator<Long> iterator() {
+			return new Iterator<Long>() {
+
+				private boolean hasNext = true;
+
+				@Override
+				public boolean hasNext() {
+					return hasNext;
+				}
+
+				@Override
+				public Long next() {
+					if (hasNext) {
+						hasNext = false;
+						return value;
+					} else {
+						throw new NoSuchElementException();
+					}
+				}
+			};
+		}
+
+		@Override
+		public Object[] toArray() {
+			return new Object[] { value };
+		}
+
+		@Override
+		public <T> T[] toArray(T[] a) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public boolean remove(Object elementToRemove) {
+			if (contains(elementToRemove)) {
+				throw new UnsupportedOperationException();
+			} else {
+				return false;
+			}
+		}
+
+		@Override
+		public boolean containsAll(Collection<?> c) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public boolean removeAll(Collection<?> c) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public boolean retainAll(Collection<?> c) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public void clear() {
+			// TODO Auto-generated method stub
+
 		}
 
 		@Override
@@ -158,13 +273,18 @@ public abstract class MaybeLong {
 			return other instanceof Just && ((Just) other).value == value;
 		}
 
+		@Override
+		public String toString() {
+			return "JustLong [" + value + "]";
+		}
+
 	}
 
-	private static class Nothing extends MaybeLong {
+	private static class NoLong extends MaybeLong {
 
-		private static final Nothing INSTANCE = new Nothing();
+		private static final NoLong INSTANCE = new NoLong();
 
-		private Nothing() {}
+		private NoLong() {}
 
 		@Override
 		public boolean isPresent() {
@@ -196,13 +316,24 @@ public abstract class MaybeLong {
 		public <X extends Throwable> void ifPresent(LongConsumer<? extends X> consumer) throws X {}
 
 		@Override
+		public <X extends Throwable> void ifAbsent(VoidFunction<? extends X> function) throws X {
+			function.apply();
+		}
+
+		@Override
+		public <X extends Throwable, Y extends Throwable> void byPresence(LongConsumer<? extends X> ifPresent,
+				VoidFunction<? extends Y> ifAbsent) throws Y {
+			ifAbsent.apply();
+		}
+
+		@Override
 		public <X extends Throwable> MaybeLong filter(LongToBooleanFunction<? extends X> predicate) throws X {
 			return this;
 		}
 
 		@Override
 		public <X extends Throwable> MaybeBoolean mapToBoolean(LongToBooleanFunction<? extends X> function) throws X {
-			return MaybeBoolean.nothing();
+			return MaybeBoolean.noBoolean();
 		}
 
 		@Override
@@ -227,7 +358,7 @@ public abstract class MaybeLong {
 
 		@Override
 		public <X extends Throwable> MaybeLong mapToLong(LongUnaryOperator<? extends X> function) throws X {
-			return MaybeLong.nothing();
+			return MaybeLong.noLong();
 		}
 
 		@Override
@@ -246,16 +377,87 @@ public abstract class MaybeLong {
 		}
 
 		@Override
+		public int size() {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+
+		@Override
+		public boolean isEmpty() {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public boolean contains(Object o) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public Iterator<Long> iterator() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public Object[] toArray() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public <T> T[] toArray(T[] a) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public boolean remove(Object o) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public boolean containsAll(Collection<?> c) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public boolean removeAll(Collection<?> c) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public boolean retainAll(Collection<?> c) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+		@Override
+		public void clear() {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
 		public int hashCode() {
 			return 0;
 		}
 
 		@Override
 		public boolean equals(Object other) {
-			return other instanceof Nothing;
+			return other instanceof NoLong;
 		}
 
-		public static Nothing instance() {
+		@Override
+		public String toString() {
+			return "NoLong []";
+		}
+
+		public static NoLong instance() {
 			return INSTANCE;
 		}
 
